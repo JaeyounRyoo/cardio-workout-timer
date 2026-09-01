@@ -106,7 +106,8 @@
             <button onclick="applyWorkoutPreset('기상전 누워서 스트레칭')" class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition">기상전</button>
             <button onclick="applyWorkoutPreset('점심 후 의자에서 허리 운동')" class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 transition">점심의자</button>
             <button onclick="applyWorkoutPreset('자기 전 바닥에서 앉아서 고관절 운동')" class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-purple-100 text-purple-800 hover:bg-purple-200 transition">취침전</button>
-            <button onclick="applyWorkoutPreset('전신 운동')" class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition">전신</button>
+            <button onclick="applyWorkoutPreset('서서 뱃살빼기')" class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-rose-100 text-rose-800 hover:bg-rose-200 transition">뱃살빼기</button>
+            <button onclick="applyWorkoutPreset('전신 운동(Plank)')" class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition">전신(플랭크)</button>
           </div>
         </div>
 
@@ -275,12 +276,18 @@
         </div>
       </div>
 
-      <!-- 다음 동작 미리보기 박스 -->
-      <div id="nextBox" class="w-full bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-3 flex items-center justify-between text-xs">
-        <span class="text-slate-400 font-semibold flex items-center gap-1.5">
-          <i data-lucide="arrow-right-circle" class="w-4 h-4 text-emerald-600"></i> 다음 순서
-        </span>
-        <span id="displayNextName" class="font-bold text-slate-700 truncate max-w-[180px]">
+      <!-- 다음 동작 미리보기 박스 (눈에 확 띄는 카드 디자인) -->
+      <div id="nextBox" class="w-full bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-emerald-50 border-2 border-emerald-400/60 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 shrink-0">
+            <i data-lucide="arrow-right" class="w-4 h-4 stroke-[3]"></i>
+          </div>
+          <div class="flex flex-col text-left">
+            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-700 leading-tight">NEXT STEP</span>
+            <span class="text-xs font-bold text-slate-600">다음 순서</span>
+          </div>
+        </div>
+        <span id="displayNextName" class="font-black text-slate-900 text-sm sm:text-base tracking-tight bg-white/95 px-3 py-1.5 rounded-xl shadow-xs border border-emerald-200/80 max-w-[180px] sm:max-w-[200px] truncate text-right">
           발털기
         </span>
       </div>
@@ -374,19 +381,38 @@
           { name: '왼발 비둘기 자세', duration: 30 }
         ]
       },
-      '전신 운동': {
-        workTime: 60,
-        restTime: 15,
-        setRestTime: 45,
+      '서서 뱃살빼기': {
+        workTime: 30,
+        restTime: 10,
+        setRestTime: 30,
+        sets: 1,
+        exercises: [
+          { name: 'Jumping Jack', duration: 30 },
+          { name: 'Leg Raise', duration: 30 },
+          { name: 'Alt Knee Taps', duration: 30 },
+          { name: 'High Knee Claps', duration: 30 },
+          { name: 'Alt Toe Touches', duration: 30 },
+          { name: 'Alt Knee Crunch', duration: 30 },
+          { name: 'Side Knee Crunch', duration: 30 }
+        ]
+      },
+      '전신 운동(Plank)': {
+        workTime: 30,
+        restTime: 10,
+        setRestTime: 60,
         sets: 3,
         exercises: [
           { name: '도그자세', duration: 30 },
           { name: '햄스트링 늘리기', duration: 30 },
-          { name: '플랭크', duration: 60 },
-          { name: '다리 가슴으로 당기기', duration: 60 },
-          { name: '옆구리로 당기기', duration: 60 },
-          { name: '팔굽혀 펴기', duration: 60 },
-          { name: '버피', duration: 60 }
+          { name: 'Mountain Climbers', duration: 30 },
+          { name: 'Plank Jumps', duration: 30 },
+          { name: 'Plank Jump Kick Back', duration: 30 },
+          { name: 'Plank Hip Dips', duration: 30 },
+          { name: 'Plank Alt Knee Crunch', duration: 30 },
+          { name: 'Plank Side Knee Crunch', duration: 30 },
+          { name: 'Side Kick Through', duration: 30 },
+          { name: 'Push Ups', duration: 30 },
+          { name: '버피', duration: 30 }
         ]
       }
     };
@@ -721,17 +747,6 @@
       if (lastFocusedExerciseIndex >= exercises.length) {
         lastFocusedExerciseIndex = exercises.length - 1;
       }
-      renderExerciseInputs();
-      saveSettings();
-    }
-
-    function removeExerciseField(index) {
-      if (exercises.length <= 1) {
-        showToast('최소 1개 이상의 동작이 필요합니다.');
-        return;
-      }
-      saveExerciseValues();
-      exercises.splice(index, 1);
       renderExerciseInputs();
       saveSettings();
     }
