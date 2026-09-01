@@ -491,15 +491,17 @@
           document.getElementById('setRestTime').value = config.setRestTime !== undefined ? config.setRestTime : 30;
           document.getElementById('voiceGuide').checked = config.voiceGuide !== false;
           document.getElementById('beatSound').checked = config.beatSound !== false;
-          exercises = config.exercises || [];
         } catch (e) {}
       }
 
-      // 초기 실행 시 빈칸 상태(기본 5개 빈 동작)로 리셋
-      if (!exercises || exercises.length === 0) {
-        const defaultTime = parseInt(document.getElementById('workTime').value) || 30;
-        exercises = Array.from({ length: 5 }, () => ({ name: '', time: defaultTime }));
-      }
+      // 페이지 로드/새로고침 시 항상 빈칸 5개로 초기화
+      const defaultTime = parseInt(document.getElementById('workTime').value) || 30;
+      exercises = Array.from({ length: 5 }, () => ({ name: '', time: defaultTime }));
+      document.getElementById('exercises').value = 5;
+      
+      const select = document.getElementById('routineSelect');
+      if (select) select.value = '';
+      
       renderExerciseInputs();
     }
 
@@ -511,8 +513,7 @@
         sets: parseInt(document.getElementById('sets').value),
         setRestTime: parseInt(document.getElementById('setRestTime').value),
         voiceGuide: document.getElementById('voiceGuide').checked,
-        beatSound: document.getElementById('beatSound').checked,
-        exercises: exercises
+        beatSound: document.getElementById('beatSound').checked
       };
       localStorage.setItem('custom_timer_config', JSON.stringify(config));
     }
