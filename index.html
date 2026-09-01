@@ -61,7 +61,7 @@
       100% { opacity: 0; transform: translate(-50%, -10px) scale(0.95); }
     }
 
-    /* 가로 스크롤바 숨기기 */
+    /* 가로 스크롤바 숨김 */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -92,7 +92,7 @@
         </div>
       </div>
 
-      <!-- 추천 프리셋 버튼 (한 줄 가로 배치 + 스크롤 지원) -->
+      <!-- 추천 프리셋 버튼 (한 줄 가로 배치) -->
       <div class="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 space-y-2">
         <div class="text-[11px] font-bold text-slate-400 flex items-center gap-1">
           <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-500"></i> 추천 루틴 바로가기
@@ -106,7 +106,7 @@
         </div>
       </div>
 
-      <!-- 루틴 관리 섹션 -->
+      <!-- 루틴 관리 섹션 (드롭다운 & 새 루틴 이름 저장) -->
       <div class="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/80 space-y-2.5">
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold text-slate-500 flex items-center gap-1.5">
@@ -138,7 +138,7 @@
 
       <!-- 타이머 기본 설정 그리드 -->
       <div class="grid grid-cols-2 gap-2.5">
-        <!-- 운동 시간 -->
+        <!-- 기본 운동 시간 -->
         <div class="bg-rose-50/60 p-3 rounded-2xl border border-rose-100 flex flex-col justify-between">
           <div class="flex items-center gap-1.5 text-xs font-bold text-rose-600 mb-1">
             <i data-lucide="flame" class="w-3.5 h-3.5"></i> 기본 운동시간(초)
@@ -150,7 +150,7 @@
           </div>
         </div>
 
-        <!-- 휴식 시간 -->
+        <!-- 동작 간 휴식 시간 -->
         <div class="bg-blue-50/60 p-3 rounded-2xl border border-blue-100 flex flex-col justify-between">
           <div class="flex items-center gap-1.5 text-xs font-bold text-blue-600 mb-1">
             <i data-lucide="coffee" class="w-3.5 h-3.5"></i> 동작 간 휴식(초)
@@ -245,7 +245,6 @@
 
     </div>
 
-
     <!-- ==================== 2. 타이머 실행 화면 (RUNNING VIEW) ==================== -->
     <div id="timerView" class="hidden p-5 flex flex-col items-center justify-between min-h-[550px] bg-gradient-to-b from-white via-slate-50 to-slate-100">
       
@@ -313,7 +312,6 @@
     <span id="toastMsg">알림</span>
   </div>
 
-  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
   <script>
     let timerInterval = null;
     let heartbeatInterval = null;
@@ -339,6 +337,7 @@
     const CIRCLE_RADIUS = 102;
     const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
 
+    // 표준 5대 기본 루틴 정의 (단일 정본)
     const WORKOUT_PRESETS = {
       morning: {
         name: '기상전 누워서 스트레칭',
@@ -423,7 +422,7 @@
         ]
       },
       plank: {
-        name: '전신 운동 (Plank)',
+        name: '전신 운동(Plank)',
         workTime: 60,
         restTime: 0,
         sets: 1,
@@ -440,8 +439,10 @@
       }
     };
 
+    const DEFAULT_PRESET_NAMES = Object.values(WORKOUT_PRESETS).map(p => p.name);
+
     window.addEventListener('DOMContentLoaded', () => {
-      ensureDefaultRoutinesSaved();
+      cleanAndSyncRoutines();
       loadSavedSettings();
       updateRoutineSelect();
       lucide.createIcons();
@@ -459,24 +460,73 @@
       }, 2500);
     }
 
-    function ensureDefaultRoutinesSaved() {
-      let routines = getSavedRoutines();
-      let changed = false;
-      Object.keys(WORKOUT_PRESETS).forEach(key => {
-        const preset = WORKOUT_PRESETS[key];
-        if (!routines[preset.name]) {
-          routines[preset.name] = {
-            workTime: preset.workTime,
-            restTime: preset.restTime,
-            sets: preset.sets,
-            setRestTime: preset.setRestTime,
-            exercises: [...preset.exercises]
-          };
-          changed = true;
-        }
+    // 로컬 스토리지에 남아있던 과거 중복/오타 루틴 키를 말끔히 정리하고 5대 루틴과 동기화
+    function cleanAndSyncRoutines() {
+      const routines = getSavedRoutines();
+      const legacyKeys = ['전신 운동 (Plank)', '전신 운동', 'fullBody', 'lowerBody', 'core', '기상전', '점심의자', '취침전', '뱃살빼기', '전신(플랭크)'];
+      
+      legacyKeys.forEach(k => {
+        if (routines[k]) delete routines[k];
       });
-      if (changed) {
-        localStorage.setItem('custom_workout_routines', JSON.stringify(routines));
+
+      // 5대 기본 루틴 데이터 갱신
+      Object.values(WORKOUT_PRESETS).forEach(preset => {
+        routines[preset.name] = {
+          workTime: preset.workTime,
+          restTime: preset.restTime,
+          sets: preset.sets,
+          setRestTime: preset.setRestTime,
+          exercises: [...preset.exercises],
+          isDefault: true
+        };
+      });
+
+      localStorage.setItem('custom_workout_routines', JSON.stringify(routines));
+    }
+
+    function getSavedRoutines() {
+      try {
+        return JSON.parse(localStorage.getItem('custom_workout_routines') || '{}');
+      } catch {
+        return {};
+      }
+    }
+
+    // 드롭다운 목록을 '기본 추천 루틴'과 '사용자 루틴'으로 명확히 구분 및 중복 배제
+    function updateRoutineSelect() {
+      const select = document.getElementById('routineSelect');
+      const routines = getSavedRoutines();
+      const currentSelected = select.value;
+      
+      select.innerHTML = '<option value="">-- 루틴 선택 --</option>';
+
+      // 1. 기본 추천 루틴 그룹
+      const defaultGroup = document.createElement('optgroup');
+      defaultGroup.label = '⭐ 기본 추천 루틴';
+      DEFAULT_PRESET_NAMES.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        defaultGroup.appendChild(opt);
+      });
+      select.appendChild(defaultGroup);
+
+      // 2. 사용자 맞춤 루틴 그룹 (기본 루틴 외 추가된 루틴만 표시)
+      const userRoutineNames = Object.keys(routines).filter(name => !DEFAULT_PRESET_NAMES.includes(name));
+      if (userRoutineNames.length > 0) {
+        const userGroup = document.createElement('optgroup');
+        userGroup.label = '📁 내가 저장한 루틴';
+        userRoutineNames.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          userGroup.appendChild(opt);
+        });
+        select.appendChild(userGroup);
+      }
+
+      if (currentSelected && routines[currentSelected]) {
+        select.value = currentSelected;
       }
     }
 
@@ -698,30 +748,6 @@
       }
     }
 
-    function getSavedRoutines() {
-      try {
-        return JSON.parse(localStorage.getItem('custom_workout_routines') || '{}');
-      } catch {
-        return {};
-      }
-    }
-
-    function updateRoutineSelect() {
-      const select = document.getElementById('routineSelect');
-      const routines = getSavedRoutines();
-      const currentSelected = select.value;
-      select.innerHTML = '<option value="">-- 루틴 선택 --</option>';
-      Object.keys(routines).forEach(name => {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        select.appendChild(opt);
-      });
-      if (currentSelected && routines[currentSelected]) {
-        select.value = currentSelected;
-      }
-    }
-
     function saveRoutine() {
       const nameInput = document.getElementById('routineName');
       let name = nameInput.value.trim();
@@ -744,7 +770,8 @@
         restTime: parseInt(document.getElementById('restTime').value),
         sets: parseInt(document.getElementById('sets').value),
         setRestTime: parseInt(document.getElementById('setRestTime').value),
-        exercises: JSON.parse(JSON.stringify(exercises))
+        exercises: JSON.parse(JSON.stringify(exercises)),
+        isDefault: DEFAULT_PRESET_NAMES.includes(name)
       };
 
       localStorage.setItem('custom_workout_routines', JSON.stringify(routines));
@@ -788,6 +815,11 @@
         return;
       }
 
+      if (DEFAULT_PRESET_NAMES.includes(name)) {
+        showToast('기본 추천 루틴은 삭제할 수 없습니다.');
+        return;
+      }
+
       const routines = getSavedRoutines();
       delete routines[name];
       localStorage.setItem('custom_workout_routines', JSON.stringify(routines));
@@ -814,6 +846,7 @@
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'ko-KR';
       utterance.rate = 1.05;
+      utterance.pitch = 1.0;
       utterance.volume = 1.0;
       window.speechSynthesis.speak(utterance);
     }
