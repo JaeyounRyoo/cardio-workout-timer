@@ -198,7 +198,7 @@
             <i data-lucide="plus" class="w-3.5 h-3.5"></i> 동작 추가
           </button>
         </div>
-        <div id="exerciseListContainer" class="space-y-2 max-h-52 overflow-y-auto pr-1">
+        <div id="exerciseListContainer" class="space-y-2 max-h-60 overflow-y-auto pr-1">
           <!-- 동적으로 생성되는 개별 동작 목록 -->
         </div>
       </div>
@@ -409,6 +409,7 @@
     let timeLeft = 10;
     let phaseTotalTime = 10;
     let hasResetForNewRoutine = false;
+    let lastFocusedExerciseIndex = -1;
 
     const CIRCLE_RADIUS = 102;
     const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
@@ -607,8 +608,9 @@
         nameInput.placeholder = defaultName;
         nameInput.className = 'exercise-name-input flex-1 min-w-0 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition truncate';
 
-        // 포커스 시 디폴트 문구("동작 N")면 비움
+        // 포커스 시 마지막 위치 기록 및 디폴트 문구("동작 N")면 비움
         nameInput.addEventListener('focus', function() {
+          lastFocusedExerciseIndex = i;
           if (this.value.trim() === defaultName) {
             this.value = '';
           }
@@ -637,6 +639,9 @@
         `;
 
         const durInput = durWrapper.querySelector('.exercise-dur-input');
+        durInput.addEventListener('focus', () => {
+          lastFocusedExerciseIndex = i;
+        });
         durInput.addEventListener('change', (e) => {
           let v = parseInt(e.target.value) || 5;
           if (v < 5) v = 5;
@@ -664,17 +669,58 @@
       lucide.createIcons();
     }
 
-    function addExerciseField() {
+    // 특정 위치 바로 아래에 새 동작 삽입
+    function insertExerciseAfter(index) {
       saveExerciseValues();
-      if (exercises.length >= 30) {
-        showToast('동작은 최대 30개까지 추가할 수 있습니다.');
+      if (exercises.length >= 40) {
+        showToast('동작은 최대 40개까지 추가할 수 있습니다.');
         return;
       }
       const defaultWork = parseInt(document.getElementById('workTime').value) || 30;
-      exercises.push({
+      const newExercise = {
         name: `동작 ${exercises.length + 1}`,
         duration: defaultWork
-      });
+      };
+      
+      const insertAt = (index >= 0 && index < exercises.length) ? index + 1 : exercises.length;
+      exercises.splice(insertAt, 0, newExercise);
+      lastFocusedExerciseIndex = insertAt;
+      
+      renderExerciseInputs();
+      saveSettings();
+
+      // 새로 생성된 인풋창으로 자동 포커스
+      setTimeout(() => {
+        const rows = document.querySelectorAll('.exercise-row');
+        if (rows[insertAt]) {
+          const targetInput = rows[insertAt].querySelector('.exercise-name-input');
+          if (targetInput) {
+            targetInput.focus();
+            targetInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        }
+      }, 50);
+    }
+
+    // 상단 '동작 추가' 버튼 클릭 시 현재 커서(포커스) 위치 하단에 추가
+    function addExerciseField() {
+      if (lastFocusedExerciseIndex >= 0 && lastFocusedExerciseIndex < exercises.length) {
+        insertExerciseAfter(lastFocusedExerciseIndex);
+      } else {
+        insertExerciseAfter(exercises.length - 1);
+      }
+    }
+
+    function removeExerciseField(index) {
+      if (exercises.length <= 1) {
+        showToast('최소 1개 이상의 동작이 필요합니다.');
+        return;
+      }
+      saveExerciseValues();
+      exercises.splice(index, 1);
+      if (lastFocusedExerciseIndex >= exercises.length) {
+        lastFocusedExerciseIndex = exercises.length - 1;
+      }
       renderExerciseInputs();
       saveSettings();
     }
@@ -723,11 +769,18 @@
 
     function saveRoutine() {
       const nameInput = document.getElementById('routineName');
-      const name = nameInput.value.trim();
+      const select = document.getElementById('routineSelect');
+      let name = nameInput.value.trim();
+
+      // 이름 입력창이 비어있으면 현재 선택된 드롭다운 루틴 이름으로 덮어쓰기 저장 가능
       if (!name) {
-        showToast('저장할 루틴 이름을 입력해주세요.');
-        nameInput.focus();
-        return;
+        if (select.value) {
+          name = select.value;
+        } else {
+          showToast('저장할 루틴 이름을 입력해주세요.');
+          nameInput.focus();
+          return;
+        }
       }
 
       saveExerciseValues();
@@ -743,7 +796,7 @@
       localStorage.setItem('custom_workout_routines', JSON.stringify(routines));
       updateRoutineSelect();
       document.getElementById('routineSelect').value = name;
-      showToast(`'${name}' 루틴이 저장되었습니다.`);
+      showToast(`'${name}' 루틴이 저장/수정되었습니다.`);
 
       nameInput.value = '';
       hasResetForNewRoutine = false;
@@ -772,6 +825,7 @@
           return { name: item.name || `동작 ${idx + 1}`, duration: item.duration || 30 };
         });
 
+        lastFocusedExerciseIndex = -1;
         renderExerciseInputs();
         saveSettings();
         showToast(`'${name}' 루틴을 불러왔습니다.`);
