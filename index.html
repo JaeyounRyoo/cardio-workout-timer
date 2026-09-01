@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>맞춤 유산소 운동 타이머</title>
+  <title>맞춤 유산소 루틴 타이머</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -18,7 +18,7 @@
 
     /* 원형 프로그레스 바 애니메이션 */
     .progress-ring__circle {
-      transition: stroke-dashoffset 0.35s ease, stroke 0.3s ease;
+      transition: stroke-dashoffset 0.3s linear, stroke 0.3s ease;
       transform: rotate(-90deg);
       transform-origin: 50% 50%;
     }
@@ -33,6 +33,23 @@
       -moz-appearance: textfield;
     }
 
+    /* 펄스 애니메이션 */
+    @keyframes subtlePulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.02); opacity: 0.92; }
+    }
+    @keyframes urgentPulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.6)); }
+      50% { transform: scale(1.05); filter: drop-shadow(0 0 28px rgba(239, 68, 68, 0.9)); }
+    }
+
+    .pulse-rhythm {
+      animation: subtlePulse 1s infinite ease-in-out;
+    }
+    .pulse-urgent {
+      animation: urgentPulse 0.25s infinite ease-in-out;
+    }
+
     /* 토스트 팝업 애니메이션 */
     .toast-animate {
       animation: fadeInOut 2.5s forwards cubic-bezier(0.16, 1, 0.3, 1);
@@ -44,27 +61,20 @@
       100% { opacity: 0; transform: translate(-50%, -10px) scale(0.95); }
     }
 
-    /* 운동 중 펄스 및 박진감 애니메이션 */
-    @keyframes beatPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.04); }
+    /* 가로 스크롤바 숨기기 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
     }
-    .pulse-rhythm {
-      animation: beatPulse 1s ease-in-out infinite;
-    }
-    @keyframes urgentPulse {
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.6)); }
-      50% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.9)); }
-    }
-    .pulse-urgent {
-      animation: urgentPulse 0.25s ease-in-out infinite;
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col items-center justify-center p-3 sm:p-5 selection:bg-emerald-500 selection:text-white">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col items-center justify-center p-3 sm:p-5 selection:bg-emerald-500 selection:text-white">
 
   <!-- 메인 컨테이너 -->
-  <div class="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-slate-200/80 border border-slate-100 overflow-hidden relative">
+  <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl shadow-slate-300/70 border border-slate-200/80 overflow-hidden relative">
 
     <!-- ==================== 1. 설정 화면 (SETUP VIEW) ==================== -->
     <div id="setupView" class="p-4 sm:p-6 space-y-4">
@@ -76,39 +86,32 @@
             <i data-lucide="timer" class="w-5 h-5"></i>
           </div>
           <div>
-            <h1 class="text-xl font-black text-slate-800 tracking-tight">유산소 루틴 타이머</h1>
-            <p class="text-xs text-slate-400 font-medium">나만의 맞춤 운동 인터벌</p>
+            <h1 class="text-xl font-black text-slate-800 tracking-tight">맞춤 루틴 타이머</h1>
+            <p class="text-xs text-slate-400 font-medium">유산소 & 인터벌 스트레칭</p>
           </div>
         </div>
       </div>
 
-      <!-- 추천 프리셋 버튼 -->
-      <div class="grid grid-cols-3 gap-2">
-        <button onclick="applyPreset('tabata')" class="py-2 px-2.5 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200 transition active:scale-95 text-center">
-          🔥 타바타 (20/10)
-        </button>
-        <button onclick="applyPreset('hiit')" class="py-2 px-2.5 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200 transition active:scale-95 text-center">
-          ⚡ HIIT (40/20)
-        </button>
-        <button onclick="applyPreset('cardio')" class="py-2 px-2.5 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200 transition active:scale-95 text-center">
-          🏃 스트레칭 (30/10)
-        </button>
+      <!-- 추천 프리셋 버튼 (한 줄 가로 배치 + 스크롤 지원) -->
+      <div class="bg-slate-50/80 p-3 rounded-2xl border border-slate-200/80 space-y-2">
+        <div class="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-500"></i> 추천 루틴 바로가기
+        </div>
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          <button onclick="applyWorkoutPreset('morning')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-emerald-100/80 text-emerald-800 hover:bg-emerald-200 border border-emerald-200/60 transition active:scale-95 text-center whitespace-nowrap">기상전</button>
+          <button onclick="applyWorkoutPreset('lunch')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-blue-100/80 text-blue-800 hover:bg-blue-200 border border-blue-200/60 transition active:scale-95 text-center whitespace-nowrap">점심의자</button>
+          <button onclick="applyWorkoutPreset('night')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-indigo-100/80 text-indigo-800 hover:bg-indigo-200 border border-indigo-200/60 transition active:scale-95 text-center whitespace-nowrap">취침전</button>
+          <button onclick="applyWorkoutPreset('belly')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-rose-100/80 text-rose-800 hover:bg-rose-200 border border-rose-200/60 transition active:scale-95 text-center whitespace-nowrap">뱃살빼기</button>
+          <button onclick="applyWorkoutPreset('plank')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-amber-100/80 text-amber-800 hover:bg-amber-200 border border-amber-200/60 transition active:scale-95 text-center whitespace-nowrap">전신(플랭크)</button>
+        </div>
       </div>
 
       <!-- 루틴 관리 섹션 -->
-      <div class="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/80 space-y-3">
+      <div class="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/80 space-y-2.5">
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold text-slate-500 flex items-center gap-1.5">
-            <i data-lucide="folder-heart" class="w-4 h-4 text-emerald-600"></i> 맞춤 루틴 선택
+            <i data-lucide="folder-heart" class="w-4 h-4 text-emerald-600"></i> 루틴 관리
           </span>
-          <!-- 추천 프리셋 뱃지 -->
-          <div class="flex flex-wrap items-center gap-1">
-            <button onclick="applyWorkoutPreset('기상전 누워서 스트레칭')" class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition">기상전</button>
-            <button onclick="applyWorkoutPreset('점심 후 의자에서 허리 운동')" class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 transition">점심의자</button>
-            <button onclick="applyWorkoutPreset('자기 전 바닥에서 앉아서 고관절 운동')" class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-purple-100 text-purple-800 hover:bg-purple-200 transition">취침전</button>
-            <button onclick="applyWorkoutPreset('서서 뱃살빼기')" class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-rose-100 text-rose-800 hover:bg-rose-200 transition">뱃살빼기</button>
-            <button onclick="applyWorkoutPreset('전신 운동(Plank)')" class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition">전신(플랭크)</button>
-          </div>
         </div>
 
         <!-- 루틴 불러오기 / 삭제 -->
@@ -124,10 +127,10 @@
           </button>
         </div>
 
-        <!-- 현재 루틴 새로 저장 -->
+        <!-- 현재 루틴 저장/수정 -->
         <div class="flex gap-1.5 items-center w-full">
           <input type="text" id="routineName" oninput="handleRoutineNameInput()" placeholder="새 루틴 이름 입력..." class="flex-1 min-w-0 bg-white border border-slate-200 text-slate-700 text-xs sm:text-sm font-medium rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400">
-          <button onclick="saveRoutine()" class="shrink-0 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition active:scale-95 flex items-center gap-1">
+          <button onclick="saveRoutine()" class="shrink-0 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition active:scale-95 flex items-center gap-1">
             <i data-lucide="save" class="w-3.5 h-3.5"></i> 저장
           </button>
         </div>
@@ -135,40 +138,27 @@
 
       <!-- 타이머 기본 설정 그리드 -->
       <div class="grid grid-cols-2 gap-2.5">
-        
-        <!-- 기본 운동 시간 -->
+        <!-- 운동 시간 -->
         <div class="bg-rose-50/60 p-3 rounded-2xl border border-rose-100 flex flex-col justify-between">
           <div class="flex items-center gap-1.5 text-xs font-bold text-rose-600 mb-1">
-            <i data-lucide="flame" class="w-3.5 h-3.5"></i> 기본 운동 (초)
+            <i data-lucide="flame" class="w-3.5 h-3.5"></i> 기본 운동시간(초)
           </div>
           <div class="flex items-center justify-between mt-1">
-            <button onclick="adjustVal('workTime', -5, 5); applyWorkTimeToAllExercises();" class="w-7 h-7 rounded-lg bg-white border border-rose-200 text-rose-600 flex items-center justify-center font-bold text-base active:scale-90 shadow-sm">−</button>
-            <input type="number" id="workTime" value="30" min="5" max="300" onchange="applyWorkTimeToAllExercises(); saveSettings();" class="w-12 bg-transparent text-center font-black text-rose-600 text-lg focus:outline-none">
-            <button onclick="adjustVal('workTime', 5, 300); applyWorkTimeToAllExercises();" class="w-7 h-7 rounded-lg bg-white border border-rose-200 text-rose-600 flex items-center justify-center font-bold text-base active:scale-90 shadow-sm">+</button>
+            <button onclick="adjustVal('workTime', -5, 5); applyWorkTimeToAll();" class="w-7 h-7 rounded-lg bg-white border border-rose-200 text-rose-600 flex items-center justify-center font-bold text-base active:scale-90 shadow-sm">−</button>
+            <input type="number" id="workTime" value="30" min="5" max="300" onchange="applyWorkTimeToAll(); saveSettings();" class="w-12 bg-transparent text-center font-black text-rose-600 text-lg focus:outline-none">
+            <button onclick="adjustVal('workTime', 5, 300); applyWorkTimeToAll();" class="w-7 h-7 rounded-lg bg-white border border-rose-200 text-rose-600 flex items-center justify-center font-bold text-base active:scale-90 shadow-sm">+</button>
           </div>
         </div>
 
-        <!-- 동작 간 휴식 시간 -->
+        <!-- 휴식 시간 -->
         <div class="bg-blue-50/60 p-3 rounded-2xl border border-blue-100 flex flex-col justify-between">
           <div class="flex items-center gap-1.5 text-xs font-bold text-blue-600 mb-1">
-            <i data-lucide="coffee" class="w-3.5 h-3.5"></i> 동작 휴식 (초)
+            <i data-lucide="coffee" class="w-3.5 h-3.5"></i> 동작 간 휴식(초)
           </div>
           <div class="flex items-center justify-between mt-1">
             <button onclick="adjustVal('restTime', -5, 0)" class="w-7 h-7 rounded-lg bg-white border border-blue-200 text-blue-600 flex items-center justify-center font-bold text-base active:scale-90 shadow-sm">−</button>
-            <input type="number" id="restTime" value="10" min="0" max="180" onchange="saveSettings()" class="w-12 bg-transparent text-center font-black text-blue-600 text-lg focus:outline-none">
+            <input type="number" id="restTime" value="0" min="0" max="180" onchange="saveSettings()" class="w-12 bg-transparent text-center font-black text-blue-600 text-lg focus:outline-none">
             <button onclick="adjustVal('restTime', 5, 180)" class="w-7 h-7 rounded-lg bg-white border border-blue-200 text-blue-600 flex items-center justify-center font-bold text-base active:scale-90 shadow-sm">+</button>
-          </div>
-        </div>
-
-        <!-- 세트 간 휴식 시간 -->
-        <div class="bg-indigo-50/60 p-3 rounded-2xl border border-indigo-100 flex flex-col justify-between">
-          <div class="flex items-center gap-1.5 text-xs font-bold text-indigo-700 mb-1">
-            <i data-lucide="hourglass" class="w-3.5 h-3.5"></i> 세트 간 휴식 (초)
-          </div>
-          <div class="flex items-center justify-between mt-1">
-            <button onclick="adjustVal('setRestTime', -5, 0)" class="w-7 h-7 rounded-lg bg-white border border-indigo-200 text-indigo-700 flex items-center justify-center font-bold text-base active:scale-90 shadow-sm">−</button>
-            <input type="number" id="setRestTime" value="30" min="0" max="300" onchange="saveSettings()" class="w-12 bg-transparent text-center font-black text-indigo-700 text-lg focus:outline-none">
-            <button onclick="adjustVal('setRestTime', 5, 300)" class="w-7 h-7 rounded-lg bg-white border border-indigo-200 text-indigo-700 flex items-center justify-center font-bold text-base active:scale-90 shadow-sm">+</button>
           </div>
         </div>
 
@@ -184,34 +174,46 @@
           </div>
         </div>
 
+        <!-- 세트 간 휴식 시간 -->
+        <div class="bg-purple-50/60 p-3 rounded-2xl border border-purple-100 flex flex-col justify-between">
+          <div class="flex items-center gap-1.5 text-xs font-bold text-purple-700 mb-1">
+            <i data-lucide="hourglass" class="w-3.5 h-3.5"></i> 세트 간 휴식(초)
+          </div>
+          <div class="flex items-center justify-between mt-1">
+            <button onclick="adjustVal('setRestTime', -5, 0)" class="w-7 h-7 rounded-lg bg-white border border-purple-200 text-purple-700 flex items-center justify-center font-bold text-base active:scale-90 shadow-sm">−</button>
+            <input type="number" id="setRestTime" value="30" min="0" max="300" onchange="saveSettings()" class="w-12 bg-transparent text-center font-black text-purple-700 text-lg focus:outline-none">
+            <button onclick="adjustVal('setRestTime', 5, 300)" class="w-7 h-7 rounded-lg bg-white border border-purple-200 text-purple-700 flex items-center justify-center font-bold text-base active:scale-90 shadow-sm">+</button>
+          </div>
+        </div>
       </div>
+
+      <!-- 숨겨진 전체 개수 인풋 -->
+      <input type="hidden" id="exercises" value="5">
 
       <!-- 세부 동작 리스트 -->
       <div class="space-y-2">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-1.5">
-            <label class="text-xs font-bold text-slate-500 flex items-center gap-1">
-              <i data-lucide="dumbbell" class="w-3.5 h-3.5 text-emerald-600"></i> 동작별 이름 및 개별 시간
-            </label>
-            <span id="exerciseCountBadge" class="text-[11px] font-extrabold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">15개</span>
-          </div>
-          <button onclick="addExerciseField()" class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 px-2.5 py-1 rounded-xl transition flex items-center gap-1">
+          <label class="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+            <i data-lucide="dumbbell" class="w-3.5 h-3.5 text-emerald-600"></i> 동작별 이름 및 개별 시간
+          </label>
+          <button onclick="addExerciseFieldAtCursor()" class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 px-2.5 py-1 rounded-xl transition flex items-center gap-1 shadow-sm">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i> 동작 추가
           </button>
         </div>
-        <div id="exerciseListContainer" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-          <!-- 동적으로 생성되는 개별 동작 목록 -->
+        <div id="exerciseListContainer" class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+          <!-- 동적 리스트 렌더링 -->
         </div>
       </div>
 
-      <!-- 옵션 스위치 (음성 & 비프음 및 박진감 비트) -->
-      <div class="space-y-2">
+      <!-- 옵션 토글들 -->
+      <div class="space-y-2 pt-1">
+        <!-- 음성 가이드 -->
         <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
           <div class="flex items-center gap-2">
             <i data-lucide="volume-2" class="w-4 h-4 text-emerald-600"></i>
             <div>
               <div class="text-xs font-bold text-slate-700">한국어 음성 및 알림음</div>
-              <div class="text-[10px] text-slate-400">동작 이름 안내 및 카운트다운 소리</div>
+              <div class="text-[10px] text-slate-400">동작 이름 음성 안내 및 비프음</div>
             </div>
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
@@ -220,12 +222,13 @@
           </label>
         </div>
 
-        <div class="flex items-center justify-between p-3 bg-rose-50/50 rounded-2xl border border-rose-200/60">
+        <!-- 심장박동 가속 비트 -->
+        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
           <div class="flex items-center gap-2">
-            <i data-lucide="activity" class="w-4 h-4 text-rose-600"></i>
+            <i data-lucide="heart-pulse" class="w-4 h-4 text-rose-500"></i>
             <div>
-              <div class="text-xs font-bold text-slate-700">박진감 비트 & 틱 사운드</div>
-              <div class="text-[10px] text-slate-400">시간 흐름 리듬음 + 후반부 가속 효과</div>
+              <div class="text-xs font-bold text-slate-700">가속 심장박동 비트음</div>
+              <div class="text-[10px] text-slate-400">10초전(0.5초), 5초전(0.25초) 가속</div>
             </div>
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
@@ -242,8 +245,9 @@
 
     </div>
 
+
     <!-- ==================== 2. 타이머 실행 화면 (RUNNING VIEW) ==================== -->
-    <div id="timerView" class="hidden p-6 flex flex-col items-center justify-between min-h-[520px] bg-gradient-to-b from-white via-slate-50 to-slate-100">
+    <div id="timerView" class="hidden p-5 flex flex-col items-center justify-between min-h-[550px] bg-gradient-to-b from-white via-slate-50 to-slate-100">
       
       <!-- 상단 정보 헤더 -->
       <div class="w-full flex items-center justify-between text-xs font-bold text-slate-500">
@@ -251,12 +255,13 @@
           세트 1 / 1
         </div>
         <div class="bg-white/90 shadow-sm border border-slate-200 px-3 py-1.5 rounded-full" id="displayExInfo">
-          동작 1 / 15
+          동작 1 / 5
         </div>
       </div>
 
-      <!-- 중앙 타이머 & 프로그레스 링 -->
-      <div id="timerContainer" class="relative flex items-center justify-center my-4 transition-transform duration-300">
+      <!-- 중앙 원형 타이머 -->
+      <div class="relative flex items-center justify-center my-3" id="circleContainer">
+        <!-- SVG 프로그레스 원 -->
         <svg class="w-64 h-64 sm:w-72 sm:h-72" viewBox="0 0 240 240">
           <circle cx="120" cy="120" r="102" stroke="#f1f5f9" stroke-width="14" fill="none" />
           <circle id="progressCircle" class="progress-ring__circle" cx="120" cy="120" r="102" stroke="#10b981" stroke-width="14" stroke-linecap="round" fill="none" stroke-dasharray="640.88" stroke-dashoffset="0" />
@@ -264,36 +269,31 @@
 
         <!-- 타이머 중앙 텍스트 -->
         <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-          <span id="stateBadge" class="px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-amber-100 text-amber-800 mb-1.5 transition-all">
+          <span id="stateBadge" class="px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-amber-100 text-amber-800 mb-1">
             준비
           </span>
           <span id="displayTime" class="text-6xl sm:text-7xl font-black tracking-tight text-slate-800 font-mono my-0.5">
             10
           </span>
-          <span id="displayExerciseName" class="text-base sm:text-lg font-extrabold text-slate-700 max-w-[190px] truncate">
-            준비 운동
+          <span id="displayExerciseName" class="text-base sm:text-lg font-black text-slate-700 max-w-[190px] leading-tight break-keep px-2">
+            운동 준비
           </span>
         </div>
       </div>
 
-      <!-- 다음 동작 미리보기 박스 (눈에 확 띄는 카드 디자인) -->
-      <div id="nextBox" class="w-full bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-emerald-50 border-2 border-emerald-400/60 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 shrink-0">
-            <i data-lucide="arrow-right" class="w-4 h-4 stroke-[3]"></i>
-          </div>
-          <div class="flex flex-col text-left">
-            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-700 leading-tight">NEXT STEP</span>
-            <span class="text-xs font-bold text-slate-600">다음 순서</span>
-          </div>
+      <!-- 다음 동작 강조 박스 -->
+      <div id="nextBox" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-3 shadow-md text-white flex items-center justify-between gap-2 border border-emerald-400">
+        <div class="flex items-center gap-1.5 shrink-0">
+          <span class="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-emerald-100">NEXT</span>
+          <i data-lucide="arrow-right" class="w-4 h-4 text-emerald-100"></i>
         </div>
-        <span id="displayNextName" class="font-black text-slate-900 text-sm sm:text-base tracking-tight bg-white/95 px-3 py-1.5 rounded-xl shadow-xs border border-emerald-200/80 max-w-[180px] sm:max-w-[200px] truncate text-right">
-          발털기
-        </span>
+        <div id="displayNextName" class="font-black text-sm sm:text-base text-right truncate flex-1 text-white drop-shadow-sm">
+          동작 1
+        </div>
       </div>
 
-      <!-- 조작 버튼 바 (일시정지, 종료) -->
-      <div class="w-full grid grid-cols-2 gap-2.5 mt-4">
+      <!-- 제어 버튼 (일시정지, 종료) -->
+      <div class="w-full grid grid-cols-2 gap-2.5 mt-3">
         <button id="pauseBtn" onclick="togglePause()" class="py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-2xl shadow-sm transition active:scale-95 flex items-center justify-center gap-2">
           <i id="pauseIcon" data-lucide="pause" class="w-4 h-4"></i>
           <span id="pauseText">일시정지</span>
@@ -313,154 +313,387 @@
     <span id="toastMsg">알림</span>
   </div>
 
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
   <script>
-    // 4가지 기본 운동 루틴 정의
-    const DEFAULT_ROUTINES = {
-      '기상전 누워서 스트레칭': {
-        workTime: 30,
-        restTime: 5,
-        setRestTime: 30,
-        sets: 1,
-        exercises: [
-          { name: '발털기', duration: 30 },
-          { name: '무릎세워 벌렸다 오므리기', duration: 30 },
-          { name: '오른 무릎세워 내외 회전', duration: 30 },
-          { name: '왼 무릎세워 내외 회전', duration: 30 },
-          { name: '오른 무릎 가슴으로 끌어당기기', duration: 30 },
-          { name: '왼 무릎 가슴으로 끌어당기기', duration: 30 },
-          { name: '무릎세워 좌우로 트위스트', duration: 30 },
-          { name: '오른 무릎에 왼발 올리고 스트레칭', duration: 30 },
-          { name: '왼 무릎에 오른발 올리고 스트레칭', duration: 30 },
-          { name: '오른 무릎에 왼발 올리고 가슴으로 당기기', duration: 30 },
-          { name: '왼 무릎에 오른발 올리고 가슴으로 당기기', duration: 30 },
-          { name: '두 무릎 동시에 가슴으로 당기기', duration: 30 },
-          { name: '오른발 비둘기 자세', duration: 30 },
-          { name: '왼발 비둘기 자세', duration: 30 },
-          { name: '개구리 자세', duration: 30 }
-        ]
-      },
-      '점심 후 의자에서 허리 운동': {
-        workTime: 30,
-        restTime: 10,
-        setRestTime: 30,
-        sets: 1,
-        exercises: [
-          { name: '왼발 오른 무릎위 전굴자세', duration: 20 },
-          { name: '왼 무릎 세우고 트위스트', duration: 20 },
-          { name: '오른발 왼 무릎위 전굴자세', duration: 20 },
-          { name: '오른 무릎 세우고 트위스트', duration: 20 },
-          { name: '의자에서 레그레이즈', duration: 30 },
-          { name: '가슴 깍지 트위스트', duration: 40 },
-          { name: '머리 깍지 무릎 크로스', duration: 40 },
-          { name: '머리 깍지 옆구리 늘리기', duration: 40 },
-          { name: '한팔 반대 무릎 바깥쪽 터치', duration: 40 }
-        ]
-      },
-      '자기 전 바닥에서 앉아서 고관절 운동': {
-        workTime: 30,
-        restTime: 10,
-        setRestTime: 30,
-        sets: 1,
-        exercises: [
-          { name: '나비자세', duration: 30 },
-          { name: '오른발 전굴자세', duration: 30 },
-          { name: '오른발 박쥐자세', duration: 30 },
-          { name: '왼발 전굴자세', duration: 30 },
-          { name: '왼발 박쥐자세', duration: 30 },
-          { name: '양발 전굴자세', duration: 30 },
-          { name: '개구리자세 다리들기', duration: 30 },
-          { name: '개구리자세 뒤로 누르기', duration: 30 },
-          { name: '오른발 사이드런지', duration: 30 },
-          { name: '고관절 내외 회전', duration: 30 },
-          { name: '왼발 사이드런지', duration: 30 },
-          { name: '고관절 내외 회전', duration: 30 },
-          { name: '오른발 전진 런지', duration: 30 },
-          { name: '왼발 전진 런지', duration: 30 },
-          { name: '무릎세우고 앉아서 무릎 트위스트', duration: 30 },
-          { name: '오른발 비둘기 자세', duration: 30 },
-          { name: '왼발 비둘기 자세', duration: 30 }
-        ]
-      },
-      '서서 뱃살빼기': {
-        workTime: 30,
-        restTime: 10,
-        setRestTime: 30,
-        sets: 1,
-        exercises: [
-          { name: 'Jumping Jack', duration: 30 },
-          { name: 'Leg Raise', duration: 30 },
-          { name: 'Alt Knee Taps', duration: 30 },
-          { name: 'High Knee Claps', duration: 30 },
-          { name: 'Alt Toe Touches', duration: 30 },
-          { name: 'Alt Knee Crunch', duration: 30 },
-          { name: 'Side Knee Crunch', duration: 30 }
-        ]
-      },
-      '전신 운동(Plank)': {
-        workTime: 30,
-        restTime: 10,
-        setRestTime: 60,
-        sets: 3,
-        exercises: [
-          { name: '도그자세', duration: 30 },
-          { name: '햄스트링 늘리기', duration: 30 },
-          { name: 'Mountain Climbers', duration: 30 },
-          { name: 'Plank Jumps', duration: 30 },
-          { name: 'Plank Jump Kick Back', duration: 30 },
-          { name: 'Plank Hip Dips', duration: 30 },
-          { name: 'Plank Alt Knee Crunch', duration: 30 },
-          { name: 'Plank Side Knee Crunch', duration: 30 },
-          { name: 'Side Kick Through', duration: 30 },
-          { name: 'Push Ups', duration: 30 },
-          { name: '버피', duration: 30 }
-        ]
-      }
-    };
-
-    // 전역 상태 변수
     let timerInterval = null;
+    let heartbeatInterval = null;
+    let audioCtx = null;
     let wakeLock = null;
     let isPaused = false;
-    
-    let workTime = 30;
-    let restTime = 10;
-    let setRestTime = 30;
+    let lastFocusedIndex = 0;
+    let hasResetOnRoutineInput = false;
+
+    let totalExercises = 5;
+    let defaultWorkTime = 30;
+    let restTime = 0;
     let totalSets = 1;
+    let setRestTime = 30;
     let exercises = [];
 
-    // 타이머 진행 변수
     let currentSet = 1;
     let currentEx = 0;
     let currentPhase = 'READY';
     let timeLeft = 10;
     let phaseTotalTime = 10;
-    let hasResetForNewRoutine = false;
-    let lastFocusedExerciseIndex = -1;
 
     const CIRCLE_RADIUS = 102;
     const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
 
+    const WORKOUT_PRESETS = {
+      morning: {
+        name: '기상전 누워서 스트레칭',
+        workTime: 30,
+        restTime: 0,
+        sets: 1,
+        setRestTime: 30,
+        exercises: [
+          { name: '발털기', time: 30 },
+          { name: '무릎세워 벌렸다 오므리기', time: 30 },
+          { name: '오른 무릎세워 내외 회전', time: 30 },
+          { name: '왼 무릎세워 내외 회전', time: 30 },
+          { name: '오른 무릎 가슴으로 끌어당기기', time: 30 },
+          { name: '왼 무릎 가슴으로 끌어당기기', time: 30 },
+          { name: '무릎세워 좌우로 트위스트', time: 30 },
+          { name: '오른 무릎에 왼발 올리고 스트레칭', time: 30 },
+          { name: '왼 무릎에 오른발 올리고 스트레칭', time: 30 },
+          { name: '오른 무릎에 왼발 올리고 가슴으로 당기기', time: 30 },
+          { name: '왼 무릎에 오른발 올리고 가슴으로 당기기', time: 30 },
+          { name: '두 무릎 동시에 가슴으로 당기기', time: 30 },
+          { name: '오른발 비둘기 자세', time: 30 },
+          { name: '왼발 비둘기 자세', time: 30 },
+          { name: '개구리 자세', time: 30 }
+        ]
+      },
+      lunch: {
+        name: '점심 후 의자에서 허리 운동',
+        workTime: 30,
+        restTime: 0,
+        sets: 1,
+        setRestTime: 30,
+        exercises: [
+          { name: '왼발 오른 무릎위 전굴자세', time: 30 },
+          { name: '왼 무릎 세우고 트위스트', time: 30 },
+          { name: '오른발 왼 무릎위 전굴자세', time: 30 },
+          { name: '오른 무릎 세우고 트위스트', time: 30 },
+          { name: '가슴 깍지 트위스트', time: 60 },
+          { name: '머리 깍지 무릎 크로스', time: 60 },
+          { name: '머리 깍지 옆구리 늘리기', time: 60 },
+          { name: '한팔 반대 무릎 바깥쪽 터치', time: 60 }
+        ]
+      },
+      night: {
+        name: '자기 전 바닥에서 앉아서 고관절 운동',
+        workTime: 30,
+        restTime: 0,
+        sets: 1,
+        setRestTime: 30,
+        exercises: [
+          { name: '나비자세', time: 30 },
+          { name: '오른발 전굴자세', time: 30 },
+          { name: '오른발 박쥐자세', time: 30 },
+          { name: '왼발 전굴자세', time: 30 },
+          { name: '왼발 박쥐자세', time: 30 },
+          { name: '양발 전굴자세', time: 30 },
+          { name: '개구리자세 다리들기', time: 30 },
+          { name: '개구리자세 뒤로 누르기', time: 30 },
+          { name: '오른발 사이드런지', time: 30 },
+          { name: '고관절 내외 회전', time: 30 },
+          { name: '왼발 사이드런지', time: 30 },
+          { name: '고관절 내외 회전', time: 30 },
+          { name: '오른발 전진 런지', time: 30 },
+          { name: '왼발 전진 런지', time: 30 },
+          { name: '무릎세우고 앉아서 무릎 트위스트', time: 30 },
+          { name: '오른발 비둘기 자세', time: 30 },
+          { name: '왼발 비둘기 자세', time: 30 }
+        ]
+      },
+      belly: {
+        name: '서서 뱃살빼기',
+        workTime: 30,
+        restTime: 0,
+        sets: 1,
+        setRestTime: 30,
+        exercises: [
+          { name: '팔뻗어 무릎당기기', time: 30 },
+          { name: '무릎 팔꿈치 크로스 터치', time: 30 },
+          { name: '사이드 니업', time: 30 },
+          { name: '서서 발끝 터치', time: 30 },
+          { name: '트위스트 점프', time: 30 },
+          { name: '스탠딩 크런치', time: 30 }
+        ]
+      },
+      plank: {
+        name: '전신 운동 (Plank)',
+        workTime: 60,
+        restTime: 0,
+        sets: 1,
+        setRestTime: 30,
+        exercises: [
+          { name: '도그자세', time: 30 },
+          { name: '햄스트링 늘리기', time: 30 },
+          { name: '플랭크', time: 60 },
+          { name: '다리 가슴으로 당기기', time: 60 },
+          { name: '옆구리로 당기기', time: 60 },
+          { name: '팔굽혀 펴기', time: 60 },
+          { name: '버피', time: 60 }
+        ]
+      }
+    };
+
     window.addEventListener('DOMContentLoaded', () => {
-      initDefaultRoutines();
-      updateRoutineSelect();
+      ensureDefaultRoutinesSaved();
       loadSavedSettings();
+      updateRoutineSelect();
       lucide.createIcons();
     });
 
-    // 기본 루틴을 로컬 스토리지에 확실하게 보장
-    function initDefaultRoutines() {
-      let savedRoutines = getSavedRoutines();
-      let isUpdated = false;
-      
-      Object.keys(DEFAULT_ROUTINES).forEach(key => {
-        if (!savedRoutines[key]) {
-          savedRoutines[key] = DEFAULT_ROUTINES[key];
-          isUpdated = true;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.textContent = message;
+      toast.classList.remove('hidden', 'toast-animate');
+      void toast.offsetWidth;
+      toast.classList.add('toast-animate');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2500);
+    }
+
+    function ensureDefaultRoutinesSaved() {
+      let routines = getSavedRoutines();
+      let changed = false;
+      Object.keys(WORKOUT_PRESETS).forEach(key => {
+        const preset = WORKOUT_PRESETS[key];
+        if (!routines[preset.name]) {
+          routines[preset.name] = {
+            workTime: preset.workTime,
+            restTime: preset.restTime,
+            sets: preset.sets,
+            setRestTime: preset.setRestTime,
+            exercises: [...preset.exercises]
+          };
+          changed = true;
         }
       });
+      if (changed) {
+        localStorage.setItem('custom_workout_routines', JSON.stringify(routines));
+      }
+    }
 
-      if (isUpdated) {
-        localStorage.setItem('custom_workout_routines', JSON.stringify(savedRoutines));
+    function loadSavedSettings() {
+      const saved = localStorage.getItem('custom_timer_config');
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          document.getElementById('workTime').value = config.workTime || 30;
+          document.getElementById('restTime').value = config.restTime !== undefined ? config.restTime : 0;
+          document.getElementById('sets').value = config.sets || 1;
+          document.getElementById('setRestTime').value = config.setRestTime !== undefined ? config.setRestTime : 30;
+          document.getElementById('voiceGuide').checked = config.voiceGuide !== false;
+          document.getElementById('beatSound').checked = config.beatSound !== false;
+          exercises = config.exercises || [];
+        } catch (e) {}
+      }
+
+      // 초기 실행 시 빈칸 상태(기본 5개 빈 동작)로 리셋
+      if (!exercises || exercises.length === 0) {
+        const defaultTime = parseInt(document.getElementById('workTime').value) || 30;
+        exercises = Array.from({ length: 5 }, () => ({ name: '', time: defaultTime }));
+      }
+      renderExerciseInputs();
+    }
+
+    function saveSettings() {
+      saveExerciseValues();
+      const config = {
+        workTime: parseInt(document.getElementById('workTime').value),
+        restTime: parseInt(document.getElementById('restTime').value),
+        sets: parseInt(document.getElementById('sets').value),
+        setRestTime: parseInt(document.getElementById('setRestTime').value),
+        voiceGuide: document.getElementById('voiceGuide').checked,
+        beatSound: document.getElementById('beatSound').checked,
+        exercises: exercises
+      };
+      localStorage.setItem('custom_timer_config', JSON.stringify(config));
+    }
+
+    function saveExerciseValues() {
+      const container = document.getElementById('exerciseListContainer');
+      const rows = container.querySelectorAll('.exercise-row');
+      const updated = [];
+      rows.forEach((row, idx) => {
+        const nameInput = row.querySelector('.ex-name-input');
+        const timeInput = row.querySelector('.ex-time-input');
+        updated.push({
+          name: nameInput.value.trim(),
+          time: parseInt(timeInput.value) || parseInt(document.getElementById('workTime').value) || 30
+        });
+      });
+      exercises = updated;
+      document.getElementById('exercises').value = exercises.length;
+    }
+
+    function renderExerciseInputs() {
+      const container = document.getElementById('exerciseListContainer');
+      container.innerHTML = '';
+
+      exercises.forEach((item, i) => {
+        const itemWrapper = document.createElement('div');
+        itemWrapper.className = 'exercise-row flex items-center gap-1.5 w-full';
+
+        const indexBadge = document.createElement('span');
+        indexBadge.className = 'text-xs font-bold text-slate-400 w-5 shrink-0 text-center';
+        indexBadge.textContent = `${i + 1}`;
+
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.value = item.name || '';
+        nameInput.placeholder = `동작 ${i + 1} 이름 입력...`;
+        nameInput.className = 'ex-name-input flex-1 min-w-0 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition';
+
+        nameInput.addEventListener('focus', () => { lastFocusedIndex = i; });
+        nameInput.addEventListener('input', (e) => {
+          exercises[i].name = e.target.value;
+          saveSettings();
+        });
+
+        const timeWrapper = document.createElement('div');
+        timeWrapper.className = 'flex items-center shrink-0 bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 gap-1';
+
+        const timeInput = document.createElement('input');
+        timeInput.type = 'number';
+        timeInput.value = item.time || 30;
+        timeInput.min = 5;
+        timeInput.max = 600;
+        timeInput.className = 'ex-time-input w-9 bg-transparent text-center font-bold text-xs text-rose-600 focus:outline-none';
+        timeInput.addEventListener('focus', () => { lastFocusedIndex = i; });
+        timeInput.addEventListener('input', (e) => {
+          exercises[i].time = parseInt(e.target.value) || 30;
+          saveSettings();
+        });
+
+        const secLabel = document.createElement('span');
+        secLabel.className = 'text-[10px] font-bold text-slate-400';
+        secLabel.textContent = '초';
+
+        timeWrapper.appendChild(timeInput);
+        timeWrapper.appendChild(secLabel);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.title = '이 동작 삭제';
+        deleteBtn.className = 'shrink-0 p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition flex items-center justify-center';
+        deleteBtn.innerHTML = '<i data-lucide="trash" class="w-3.5 h-3.5"></i>';
+        deleteBtn.onclick = () => removeExerciseField(i);
+
+        itemWrapper.appendChild(indexBadge);
+        itemWrapper.appendChild(nameInput);
+        itemWrapper.appendChild(timeWrapper);
+        itemWrapper.appendChild(deleteBtn);
+        container.appendChild(itemWrapper);
+      });
+
+      lucide.createIcons();
+    }
+
+    function addExerciseFieldAtCursor() {
+      saveExerciseValues();
+      const currentCount = exercises.length;
+      if (currentCount >= 30) {
+        showToast('동작은 최대 30개까지 추가할 수 있습니다.');
+        return;
+      }
+
+      const defaultTime = parseInt(document.getElementById('workTime').value) || 30;
+      const newEx = { name: '', time: defaultTime };
+
+      let insertPos = exercises.length;
+      if (lastFocusedIndex >= 0 && lastFocusedIndex < exercises.length) {
+        insertPos = lastFocusedIndex + 1;
+      }
+
+      exercises.splice(insertPos, 0, newEx);
+      document.getElementById('exercises').value = exercises.length;
+      renderExerciseInputs();
+      saveSettings();
+
+      setTimeout(() => {
+        const rows = document.querySelectorAll('.exercise-row');
+        if (rows[insertPos]) {
+          const input = rows[insertPos].querySelector('.ex-name-input');
+          if (input) {
+            input.focus();
+            rows[insertPos].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        }
+      }, 50);
+    }
+
+    function removeExerciseField(index) {
+      if (exercises.length <= 1) {
+        showToast('최소 1개 이상의 동작이 필요합니다.');
+        return;
+      }
+      saveExerciseValues();
+      exercises.splice(index, 1);
+      document.getElementById('exercises').value = exercises.length;
+      if (lastFocusedIndex >= exercises.length) lastFocusedIndex = exercises.length - 1;
+      renderExerciseInputs();
+      saveSettings();
+    }
+
+    function applyWorkTimeToAll() {
+      const val = parseInt(document.getElementById('workTime').value) || 30;
+      exercises.forEach(ex => { ex.time = val; });
+      renderExerciseInputs();
+      saveSettings();
+    }
+
+    function adjustVal(id, delta, limit) {
+      const el = document.getElementById(id);
+      let val = parseInt(el.value) + delta;
+      if (delta < 0 && val < limit) val = limit;
+      if (delta > 0 && val > limit) val = limit;
+      el.value = val;
+      saveSettings();
+    }
+
+    function applyWorkoutPreset(presetKey, showToastMsg = true) {
+      const preset = WORKOUT_PRESETS[presetKey];
+      if (!preset) return;
+
+      document.getElementById('workTime').value = preset.workTime;
+      document.getElementById('restTime').value = preset.restTime;
+      document.getElementById('sets').value = preset.sets;
+      document.getElementById('setRestTime').value = preset.setRestTime;
+
+      exercises = JSON.parse(JSON.stringify(preset.exercises));
+      document.getElementById('exercises').value = exercises.length;
+
+      const select = document.getElementById('routineSelect');
+      if (select) select.value = preset.name;
+
+      renderExerciseInputs();
+      saveSettings();
+
+      if (showToastMsg) {
+        showToast(`'${preset.name}' 루틴이 적용되었습니다.`);
+      }
+    }
+
+    function handleRoutineNameInput() {
+      const nameInput = document.getElementById('routineName');
+      const val = nameInput.value;
+      if (val.trim().length > 0 && !hasResetOnRoutineInput) {
+        document.getElementById('routineSelect').value = '';
+        const defaultTime = parseInt(document.getElementById('workTime').value) || 30;
+        exercises = Array.from({ length: 5 }, () => ({ name: '', time: defaultTime }));
+        document.getElementById('exercises').value = 5;
+        renderExerciseInputs();
+        saveSettings();
+        hasResetOnRoutineInput = true;
+      } else if (val.trim().length === 0) {
+        hasResetOnRoutineInput = false;
       }
     }
 
@@ -475,6 +708,7 @@
     function updateRoutineSelect() {
       const select = document.getElementById('routineSelect');
       const routines = getSavedRoutines();
+      const currentSelected = select.value;
       select.innerHTML = '<option value="">-- 루틴 선택 --</option>';
       Object.keys(routines).forEach(name => {
         const opt = document.createElement('option');
@@ -482,339 +716,42 @@
         opt.textContent = name;
         select.appendChild(opt);
       });
-    }
-
-    function showToast(message) {
-      const toast = document.getElementById('toast');
-      const toastMsg = document.getElementById('toastMsg');
-      toastMsg.textContent = message;
-      toast.classList.remove('hidden', 'toast-animate');
-      void toast.offsetWidth;
-      toast.classList.add('toast-animate');
-      setTimeout(() => {
-        toast.classList.add('hidden');
-      }, 2500);
-    }
-
-    function loadSavedSettings() {
-      const saved = localStorage.getItem('custom_timer_config');
-      let loaded = false;
-      if (saved) {
-        try {
-          const config = JSON.parse(saved);
-          if (Array.isArray(config.exercises) && config.exercises.length > 0) {
-            document.getElementById('workTime').value = config.workTime || 30;
-            document.getElementById('restTime').value = config.restTime !== undefined ? config.restTime : 10;
-            document.getElementById('setRestTime').value = config.setRestTime !== undefined ? config.setRestTime : 30;
-            document.getElementById('sets').value = config.sets || 1;
-            document.getElementById('voiceGuide').checked = config.voiceGuide !== false;
-            if (document.getElementById('beatSound')) {
-              document.getElementById('beatSound').checked = config.beatSound !== false;
-            }
-            exercises = config.exercises.map((item, idx) => {
-              if (typeof item === 'string') return { name: item, duration: config.workTime || 30 };
-              return { name: item.name || `동작 ${idx + 1}`, duration: item.duration || 30 };
-            });
-            loaded = true;
-          }
-        } catch (e) {}
+      if (currentSelected && routines[currentSelected]) {
+        select.value = currentSelected;
       }
-      
-      // 초기값이 없으면 1번 '기상전 누워서 스트레칭'을 기본 탑재
-      if (!loaded) {
-        applyWorkoutPreset('기상전 누워서 스트레칭', false);
-      } else {
-        renderExerciseInputs();
-      }
-    }
-
-    function saveSettings() {
-      saveExerciseValues();
-      const config = {
-        workTime: parseInt(document.getElementById('workTime').value) || 30,
-        restTime: parseInt(document.getElementById('restTime').value) || 10,
-        setRestTime: parseInt(document.getElementById('setRestTime').value) || 30,
-        sets: parseInt(document.getElementById('sets').value) || 1,
-        voiceGuide: document.getElementById('voiceGuide').checked,
-        beatSound: document.getElementById('beatSound') ? document.getElementById('beatSound').checked : true,
-        exercises: exercises
-      };
-      localStorage.setItem('custom_timer_config', JSON.stringify(config));
-    }
-
-    function saveExerciseValues() {
-      const container = document.getElementById('exerciseListContainer');
-      const rows = container.querySelectorAll('.exercise-row');
-      rows.forEach((row, idx) => {
-        const nameInput = row.querySelector('.exercise-name-input');
-        const durInput = row.querySelector('.exercise-dur-input');
-        if (nameInput && durInput && exercises[idx]) {
-          exercises[idx].name = nameInput.value.trim() || `동작 ${idx + 1}`;
-          exercises[idx].duration = parseInt(durInput.value) || 30;
-        }
-      });
-    }
-
-    function applyWorkTimeToAllExercises() {
-      const defaultWork = parseInt(document.getElementById('workTime').value) || 30;
-      exercises.forEach(ex => {
-        ex.duration = defaultWork;
-      });
-      renderExerciseInputs();
-    }
-
-    // 새 루틴 이름 입력란에 텍스트 입력 시 목록 1회 리셋
-    function handleRoutineNameInput() {
-      const routineInput = document.getElementById('routineName');
-      const text = routineInput.value;
-
-      if (text.trim().length > 0 && !hasResetForNewRoutine) {
-        document.getElementById('routineSelect').value = '';
-        const defaultWork = parseInt(document.getElementById('workTime').value) || 30;
-        exercises = Array.from({ length: 5 }, (_, i) => ({
-          name: `동작 ${i + 1}`,
-          duration: defaultWork
-        }));
-        renderExerciseInputs();
-        saveSettings();
-        hasResetForNewRoutine = true;
-      } else if (text.trim().length === 0) {
-        hasResetForNewRoutine = false;
-      }
-    }
-
-    // 상단 뱃지 클릭 시 루틴 즉시 교체
-    function applyWorkoutPreset(routineName, showNotice = true) {
-      const routines = getSavedRoutines();
-      const targetRoutine = routines[routineName] || DEFAULT_ROUTINES[routineName];
-
-      if (!targetRoutine) return;
-      
-      document.getElementById('workTime').value = targetRoutine.workTime || 30;
-      document.getElementById('restTime').value = targetRoutine.restTime !== undefined ? targetRoutine.restTime : 10;
-      document.getElementById('setRestTime').value = targetRoutine.setRestTime !== undefined ? targetRoutine.setRestTime : 30;
-      document.getElementById('sets').value = targetRoutine.sets || 1;
-      
-      exercises = JSON.parse(JSON.stringify(targetRoutine.exercises));
-
-      // 드롭다운 선택값도 동기화
-      const select = document.getElementById('routineSelect');
-      if (select) select.value = routineName;
-      document.getElementById('routineName').value = '';
-      hasResetForNewRoutine = false;
-
-      renderExerciseInputs();
-      saveSettings();
-      if (showNotice) {
-        showToast(`'${routineName}' 루틴이 적용되었습니다.`);
-      }
-    }
-
-    function renderExerciseInputs() {
-      const container = document.getElementById('exerciseListContainer');
-      const badge = document.getElementById('exerciseCountBadge');
-      if (badge) badge.textContent = `${exercises.length}개`;
-
-      container.innerHTML = '';
-
-      exercises.forEach((item, i) => {
-        const defaultName = `동작 ${i + 1}`;
-        const itemWrapper = document.createElement('div');
-        itemWrapper.className = 'exercise-row flex items-center gap-1.5 w-full bg-slate-50/80 p-1.5 rounded-xl border border-slate-200/80';
-
-        // 번호
-        const indexBadge = document.createElement('span');
-        indexBadge.className = 'text-xs font-bold text-slate-400 w-5 shrink-0 text-center';
-        indexBadge.textContent = `${i + 1}`;
-
-        // 동작 이름
-        const nameInput = document.createElement('input');
-        nameInput.type = 'text';
-        nameInput.value = item.name;
-        nameInput.placeholder = defaultName;
-        nameInput.className = 'exercise-name-input flex-1 min-w-0 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition truncate';
-
-        // 포커스 시 마지막 위치 기록 및 디폴트 문구("동작 N")면 비움
-        nameInput.addEventListener('focus', function() {
-          lastFocusedExerciseIndex = i;
-          if (this.value.trim() === defaultName) {
-            this.value = '';
-          }
-        });
-
-        // 포커스 해제 시 공백이면 복원
-        nameInput.addEventListener('blur', function() {
-          if (this.value.trim() === '') {
-            this.value = defaultName;
-          }
-          exercises[i].name = this.value.trim();
-          saveSettings();
-        });
-
-        nameInput.addEventListener('input', (e) => {
-          exercises[i].name = e.target.value;
-        });
-
-        // 개별 시간 박스
-        const durWrapper = document.createElement('div');
-        durWrapper.className = 'shrink-0 flex items-center gap-1 bg-white border border-rose-200 px-2 py-1 rounded-lg';
-        durWrapper.innerHTML = `
-          <i data-lucide="flame" class="w-3 h-3 text-rose-500"></i>
-          <input type="number" min="5" max="300" value="${item.duration || 30}" class="exercise-dur-input w-8 text-center text-xs font-black text-rose-600 focus:outline-none bg-transparent" title="운동 시간(초)">
-          <span class="text-[10px] font-bold text-slate-400">초</span>
-        `;
-
-        const durInput = durWrapper.querySelector('.exercise-dur-input');
-        durInput.addEventListener('focus', () => {
-          lastFocusedExerciseIndex = i;
-        });
-        durInput.addEventListener('change', (e) => {
-          let v = parseInt(e.target.value) || 5;
-          if (v < 5) v = 5;
-          if (v > 300) v = 300;
-          e.target.value = v;
-          exercises[i].duration = v;
-          saveSettings();
-        });
-
-        // 삭제 버튼
-        const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.title = '이 동작 삭제';
-        deleteBtn.className = 'shrink-0 p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition flex items-center justify-center';
-        deleteBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>';
-        deleteBtn.onclick = () => removeExerciseField(i);
-
-        itemWrapper.appendChild(indexBadge);
-        itemWrapper.appendChild(nameInput);
-        itemWrapper.appendChild(durWrapper);
-        itemWrapper.appendChild(deleteBtn);
-        container.appendChild(itemWrapper);
-      });
-
-      lucide.createIcons();
-    }
-
-    // 특정 위치 바로 아래에 새 동작 삽입
-    function insertExerciseAfter(index) {
-      saveExerciseValues();
-      if (exercises.length >= 40) {
-        showToast('동작은 최대 40개까지 추가할 수 있습니다.');
-        return;
-      }
-      const defaultWork = parseInt(document.getElementById('workTime').value) || 30;
-      const newExercise = {
-        name: `동작 ${exercises.length + 1}`,
-        duration: defaultWork
-      };
-      
-      const insertAt = (index >= 0 && index < exercises.length) ? index + 1 : exercises.length;
-      exercises.splice(insertAt, 0, newExercise);
-      lastFocusedExerciseIndex = insertAt;
-      
-      renderExerciseInputs();
-      saveSettings();
-
-      // 새로 생성된 인풋창으로 자동 포커스
-      setTimeout(() => {
-        const rows = document.querySelectorAll('.exercise-row');
-        if (rows[insertAt]) {
-          const targetInput = rows[insertAt].querySelector('.exercise-name-input');
-          if (targetInput) {
-            targetInput.focus();
-            targetInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }
-        }
-      }, 50);
-    }
-
-    // 상단 '동작 추가' 버튼 클릭 시 현재 커서(포커스) 위치 하단에 추가
-    function addExerciseField() {
-      if (lastFocusedExerciseIndex >= 0 && lastFocusedExerciseIndex < exercises.length) {
-        insertExerciseAfter(lastFocusedExerciseIndex);
-      } else {
-        insertExerciseAfter(exercises.length - 1);
-      }
-    }
-
-    function removeExerciseField(index) {
-      if (exercises.length <= 1) {
-        showToast('최소 1개 이상의 동작이 필요합니다.');
-        return;
-      }
-      saveExerciseValues();
-      exercises.splice(index, 1);
-      if (lastFocusedExerciseIndex >= exercises.length) {
-        lastFocusedExerciseIndex = exercises.length - 1;
-      }
-      renderExerciseInputs();
-      saveSettings();
-    }
-
-    function adjustVal(id, delta, limit) {
-      const el = document.getElementById(id);
-      let val = parseInt(el.value) + delta;
-      if (delta < 0 && val < limit) val = limit;
-      if (delta > 0 && val > limit) val = limit;
-      el.value = val;
-      saveSettings();
-    }
-
-    function applyPreset(type) {
-      if (type === 'tabata') {
-        document.getElementById('workTime').value = 20;
-        document.getElementById('restTime').value = 10;
-        document.getElementById('setRestTime').value = 60;
-        document.getElementById('sets').value = 4;
-      } else if (type === 'hiit') {
-        document.getElementById('workTime').value = 40;
-        document.getElementById('restTime').value = 20;
-        document.getElementById('setRestTime').value = 60;
-        document.getElementById('sets').value = 3;
-      } else if (type === 'cardio') {
-        document.getElementById('workTime').value = 30;
-        document.getElementById('restTime').value = 10;
-        document.getElementById('setRestTime').value = 30;
-        document.getElementById('sets').value = 1;
-      }
-      applyWorkTimeToAllExercises();
-      saveSettings();
-      showToast('운동 시간 프리셋이 적용되었습니다.');
     }
 
     function saveRoutine() {
       const nameInput = document.getElementById('routineName');
-      const select = document.getElementById('routineSelect');
       let name = nameInput.value.trim();
+      const select = document.getElementById('routineSelect');
 
-      // 이름 입력창이 비어있으면 현재 선택된 드롭다운 루틴 이름으로 덮어쓰기 저장 가능
+      if (!name && select.value) {
+        name = select.value;
+      }
+
       if (!name) {
-        if (select.value) {
-          name = select.value;
-        } else {
-          showToast('저장할 루틴 이름을 입력해주세요.');
-          nameInput.focus();
-          return;
-        }
+        showToast('저장할 루틴 이름을 입력하거나 목록에서 선택해주세요.');
+        nameInput.focus();
+        return;
       }
 
       saveExerciseValues();
       const routines = getSavedRoutines();
       routines[name] = {
-        workTime: parseInt(document.getElementById('workTime').value) || 30,
-        restTime: parseInt(document.getElementById('restTime').value) || 10,
-        setRestTime: parseInt(document.getElementById('setRestTime').value) || 30,
-        sets: parseInt(document.getElementById('sets').value) || 1,
+        workTime: parseInt(document.getElementById('workTime').value),
+        restTime: parseInt(document.getElementById('restTime').value),
+        sets: parseInt(document.getElementById('sets').value),
+        setRestTime: parseInt(document.getElementById('setRestTime').value),
         exercises: JSON.parse(JSON.stringify(exercises))
       };
 
       localStorage.setItem('custom_workout_routines', JSON.stringify(routines));
       updateRoutineSelect();
-      document.getElementById('routineSelect').value = name;
-      showToast(`'${name}' 루틴이 저장/수정되었습니다.`);
-
+      select.value = name;
       nameInput.value = '';
-      hasResetForNewRoutine = false;
+      hasResetOnRoutineInput = false;
+      showToast(`'${name}' 루틴이 저장/수정되었습니다.`);
     }
 
     function loadSelectedRoutine() {
@@ -822,25 +759,20 @@
       const name = select.value;
       if (!name) return;
 
-      document.getElementById('routineName').value = '';
-      hasResetForNewRoutine = false;
-
       const routines = getSavedRoutines();
-      const routine = routines[name] || DEFAULT_ROUTINES[name];
+      const routine = routines[name];
       if (routine) {
         document.getElementById('workTime').value = routine.workTime || 30;
-        document.getElementById('restTime').value = routine.restTime !== undefined ? routine.restTime : 10;
-        document.getElementById('setRestTime').value = routine.setRestTime !== undefined ? routine.setRestTime : 30;
+        document.getElementById('restTime').value = routine.restTime !== undefined ? routine.restTime : 0;
         document.getElementById('sets').value = routine.sets || 1;
+        document.getElementById('setRestTime').value = routine.setRestTime !== undefined ? routine.setRestTime : 30;
         
-        exercises = routine.exercises.map((item, idx) => {
-          if (typeof item === 'string') {
-            return { name: item, duration: routine.workTime || 30 };
-          }
-          return { name: item.name || `동작 ${idx + 1}`, duration: item.duration || 30 };
+        exercises = routine.exercises.map((ex, i) => {
+          if (typeof ex === 'string') return { name: ex, time: routine.workTime || 30 };
+          return { name: ex.name || '', time: ex.time || 30 };
         });
 
-        lastFocusedExerciseIndex = -1;
+        document.getElementById('exercises').value = exercises.length;
         renderExerciseInputs();
         saveSettings();
         showToast(`'${name}' 루틴을 불러왔습니다.`);
@@ -855,16 +787,22 @@
         return;
       }
 
-      if (DEFAULT_ROUTINES[name]) {
-        showToast('기본 제공 루틴은 삭제할 수 없습니다.');
-        return;
-      }
-
       const routines = getSavedRoutines();
       delete routines[name];
       localStorage.setItem('custom_workout_routines', JSON.stringify(routines));
       updateRoutineSelect();
       showToast(`'${name}' 루틴이 삭제되었습니다.`);
+    }
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) audioCtx = new AudioCtx();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
     }
 
     function speak(text) {
@@ -875,42 +813,21 @@
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'ko-KR';
       utterance.rate = 1.05;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0; // 최대 볼륨 보장
+      utterance.volume = 1.0;
       window.speechSynthesis.speak(utterance);
     }
 
-    let globalAudioCtx = null;
-    function getAudioCtx() {
-      try {
-        if (!globalAudioCtx) {
-          const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          if (AudioCtx) globalAudioCtx = new AudioCtx();
-        }
-        if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
-          globalAudioCtx.resume();
-        }
-        return globalAudioCtx;
-      } catch (e) {
-        return null;
-      }
-    }
-
-    function playBeep(freq = 600, duration = 0.18) {
+    function playBeep(freq = 600, duration = 0.15) {
       if (!document.getElementById('voiceGuide').checked) return;
       try {
-        const ctx = getAudioCtx();
+        const ctx = getAudioContext();
         if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        
-        // 스마트폰 스피커에서 또렷하게 들리도록 triangle 파형 및 볼륨 증폭
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        
         gain.gain.setValueAtTime(0.85, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
-
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start();
@@ -918,58 +835,55 @@
       } catch (e) {}
     }
 
-    // 운동 중 리듬 틱 및 심장박동 효과음 (스케줄링 지원 및 가속 템포)
-    function playHeartbeatTick(type = 'normal', offsetSec = 0) {
-      const beatToggle = document.getElementById('beatSound');
-      if (beatToggle && !beatToggle.checked) return;
-
+    function playHeartbeatBeat(isUrgent = false) {
+      if (!document.getElementById('beatSound').checked) return;
       try {
-        const ctx = getAudioCtx();
+        const ctx = getAudioContext();
         if (!ctx) return;
-        const startTime = ctx.currentTime + offsetSec;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
 
-        if (type === 'normal') {
-          // 스마트폰 스피커에서 선명하게 들리는 우드블록/메트로놈 틱 사운드
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(480, startTime);
-          osc.frequency.exponentialRampToValueAtTime(160, startTime + 0.07);
+        const baseFreq = isUrgent ? 360 : 260;
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
 
-          gain.gain.setValueAtTime(0.75, startTime);
-          gain.gain.exponentialRampToValueAtTime(0.005, startTime + 0.07);
+        const volume = isUrgent ? 0.9 : 0.75;
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
 
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(startTime);
-          osc.stop(startTime + 0.08);
-        } else if (type === 'urgent') {
-          // 마지막 구간 긴박하고 선명한 듀얼 펀치 비트
-          const osc1 = ctx.createOscillator();
-          const osc2 = ctx.createOscillator();
-          const gain = ctx.createGain();
-
-          osc1.type = 'triangle';
-          osc1.frequency.setValueAtTime(650, startTime);
-          osc1.frequency.exponentialRampToValueAtTime(220, startTime + 0.06);
-
-          osc2.type = 'sine';
-          osc2.frequency.setValueAtTime(980, startTime);
-          osc2.frequency.exponentialRampToValueAtTime(440, startTime + 0.06);
-
-          gain.gain.setValueAtTime(0.85, startTime);
-          gain.gain.exponentialRampToValueAtTime(0.005, startTime + 0.06);
-
-          osc1.connect(gain);
-          osc2.connect(gain);
-          gain.connect(ctx.destination);
-          osc1.start(startTime);
-          osc2.start(startTime);
-          osc1.stop(startTime + 0.07);
-          osc2.stop(startTime + 0.07);
-        }
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
       } catch (e) {}
+    }
+
+    function stopHeartbeatScheduler() {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+      }
+    }
+
+    function startHeartbeatSchedulerForCurrentSecond(secLeft) {
+      stopHeartbeatScheduler();
+      if (currentPhase !== 'WORK' || isPaused) return;
+
+      if (secLeft > 10) {
+        playHeartbeatBeat(false);
+      } else if (secLeft <= 10 && secLeft > 5) {
+        playHeartbeatBeat(false);
+        heartbeatInterval = setInterval(() => {
+          if (!isPaused && currentPhase === 'WORK') playHeartbeatBeat(false);
+        }, 500);
+      } else if (secLeft <= 5 && secLeft > 0) {
+        playHeartbeatBeat(true);
+        heartbeatInterval = setInterval(() => {
+          if (!isPaused && currentPhase === 'WORK') playHeartbeatBeat(true);
+        }, 250);
+      }
     }
 
     async function requestWakeLock() {
@@ -986,19 +900,20 @@
       }
     }
 
+    function getExName(index) {
+      const raw = exercises[index]?.name?.trim();
+      return raw ? raw : `동작 ${index + 1}`;
+    }
+
     function startWorkout() {
+      getAudioContext();
       saveExerciseValues();
       saveSettings();
 
-      if (!exercises || exercises.length === 0) {
-        showToast('운동 동작을 최소 1개 이상 추가해주세요.');
-        return;
-      }
-
-      workTime = parseInt(document.getElementById('workTime').value) || 30;
-      restTime = parseInt(document.getElementById('restTime').value) || 10;
-      setRestTime = parseInt(document.getElementById('setRestTime').value) || 30;
-      totalSets = parseInt(document.getElementById('sets').value) || 1;
+      totalExercises = exercises.length;
+      totalSets = parseInt(document.getElementById('sets').value);
+      restTime = parseInt(document.getElementById('restTime').value);
+      setRestTime = parseInt(document.getElementById('setRestTime').value);
 
       document.getElementById('setupView').classList.add('hidden');
       document.getElementById('timerView').classList.remove('hidden');
@@ -1017,6 +932,7 @@
       speak("운동을 준비하세요. 10초 전");
 
       clearInterval(timerInterval);
+      stopHeartbeatScheduler();
       timerInterval = setInterval(timerTick, 1000);
     }
 
@@ -1025,34 +941,16 @@
 
       timeLeft--;
 
-      // 운동 중 박진감 가속 비트 사운드 처리 (10초 전: 0.5초 단위 / 5초 전: 0.25초 단위)
-      if (currentPhase === 'WORK' && timeLeft >= 0) {
-        if (timeLeft > 10) {
-          // 기본: 1초 단위 (1회)
-          playHeartbeatTick('normal', 0);
-        } else if (timeLeft <= 10 && timeLeft > 5) {
-          // 10초 이하: 0.5초 단위 (초당 2회)
-          playHeartbeatTick('normal', 0);
-          playHeartbeatTick('normal', 0.5);
-        } else if (timeLeft <= 5 && timeLeft > 0) {
-          // 5초 이하: 0.25초 단위 (초당 4회 가속 템포)
-          playHeartbeatTick('urgent', 0);
-          playHeartbeatTick('urgent', 0.25);
-          playHeartbeatTick('urgent', 0.5);
-          playHeartbeatTick('urgent', 0.75);
-        }
+      if (currentPhase === 'WORK') {
+        startHeartbeatSchedulerForCurrentSecond(timeLeft);
       }
 
-      // 마지막 3, 2, 1초 카운트다운 비프음
       if (timeLeft <= 3 && timeLeft > 0) {
-        if (currentPhase === 'WORK') {
-          playBeep(660 + (3 - timeLeft) * 120, 0.12); // 3초부터 음정이 점점 높아지며 긴장감 고조
-        } else {
-          playBeep(440, 0.1);
-        }
+        playBeep(440 + (4 - timeLeft) * 80, 0.12);
       }
 
       if (timeLeft < 0) {
+        stopHeartbeatScheduler();
         handlePhaseTransition();
       } else {
         updateTimerDisplay();
@@ -1060,67 +958,67 @@
     }
 
     function handlePhaseTransition() {
-      const totalExCount = exercises.length;
-
       if (currentPhase === 'READY') {
         currentPhase = 'WORK';
         currentEx = 1;
-        const targetDuration = exercises[0]?.duration || workTime;
-        timeLeft = targetDuration;
-        phaseTotalTime = targetDuration;
+        const targetTime = exercises[0]?.time || defaultWorkTime;
+        timeLeft = targetTime;
+        phaseTotalTime = targetTime;
         playBeep(880, 0.3);
-        speak(`${exercises[0].name}, 시작!`);
+        speak(`${getExName(0)}, 시작!`);
+        startHeartbeatSchedulerForCurrentSecond(timeLeft);
       } 
       else if (currentPhase === 'WORK') {
-        if (currentEx === totalExCount) {
+        if (currentEx === totalExercises) {
           if (currentSet === totalSets) {
             finishWorkout();
             return;
-          }
-
-          currentSet++;
-          currentEx = 1;
-
-          if (setRestTime > 0) {
-            currentPhase = 'SET_REST';
-            timeLeft = setRestTime;
-            phaseTotalTime = setRestTime;
-            playBeep(520, 0.3);
-            speak(`세트 휴식 시간입니다. 다음은 ${currentSet}세트, ${exercises[0].name}`);
           } else {
-            currentPhase = 'WORK';
-            const targetDuration = exercises[0]?.duration || workTime;
-            timeLeft = targetDuration;
-            phaseTotalTime = targetDuration;
-            playBeep(880, 0.3);
-            speak(`${currentSet}세트 시작! ${exercises[0].name}`);
+            currentSet++;
+            currentEx = 1;
+            if (setRestTime > 0) {
+              currentPhase = 'SET_REST';
+              timeLeft = setRestTime;
+              phaseTotalTime = setRestTime;
+              playBeep(550, 0.3);
+              speak(`세트 완료. ${setRestTime}초간 세트 휴식 시간입니다.`);
+            } else {
+              currentPhase = 'WORK';
+              const targetTime = exercises[0]?.time || defaultWorkTime;
+              timeLeft = targetTime;
+              phaseTotalTime = targetTime;
+              playBeep(880, 0.3);
+              speak(`세트 ${currentSet}, ${getExName(0)} 시작!`);
+              startHeartbeatSchedulerForCurrentSecond(timeLeft);
+            }
           }
-        } 
-        else {
+        } else {
           currentEx++;
           if (restTime > 0) {
             currentPhase = 'REST';
             timeLeft = restTime;
             phaseTotalTime = restTime;
-            playBeep(520, 0.3);
-            speak(`휴식 시간입니다. 다음은 ${exercises[currentEx - 1].name}`);
+            playBeep(520, 0.25);
+            speak(`휴식. 다음은 ${getExName(currentEx - 1)}`);
           } else {
             currentPhase = 'WORK';
-            const targetDuration = exercises[currentEx - 1]?.duration || workTime;
-            timeLeft = targetDuration;
-            phaseTotalTime = targetDuration;
+            const targetTime = exercises[currentEx - 1]?.time || defaultWorkTime;
+            timeLeft = targetTime;
+            phaseTotalTime = targetTime;
             playBeep(880, 0.3);
-            speak(`${exercises[currentEx - 1].name}, 시작!`);
+            speak(`${getExName(currentEx - 1)}, 시작!`);
+            startHeartbeatSchedulerForCurrentSecond(timeLeft);
           }
         }
       } 
       else if (currentPhase === 'REST' || currentPhase === 'SET_REST') {
         currentPhase = 'WORK';
-        const targetDuration = exercises[currentEx - 1]?.duration || workTime;
-        timeLeft = targetDuration;
-        phaseTotalTime = targetDuration;
+        const targetTime = exercises[currentEx - 1]?.time || defaultWorkTime;
+        timeLeft = targetTime;
+        phaseTotalTime = targetTime;
         playBeep(880, 0.3);
-        speak(`${exercises[currentEx - 1].name}, 시작!`);
+        speak(`${getExName(currentEx - 1)}, 시작!`);
+        startHeartbeatSchedulerForCurrentSecond(timeLeft);
       }
 
       updateTimerDisplay();
@@ -1128,23 +1026,20 @@
 
     function finishWorkout() {
       clearInterval(timerInterval);
+      stopHeartbeatScheduler();
       releaseWakeLock();
 
       currentPhase = 'FINISHED';
-      const container = document.getElementById('timerContainer');
-      if (container) {
-        container.classList.remove('pulse-rhythm', 'pulse-urgent');
-      }
-
       document.getElementById('stateBadge').textContent = '운동 완료 🎉';
-      document.getElementById('stateBadge').className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-emerald-100 text-emerald-800 mb-1.5';
+      document.getElementById('stateBadge').className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-emerald-100 text-emerald-800 mb-1';
       document.getElementById('displayTime').textContent = '완료!';
-      document.getElementById('displayExerciseName').textContent = '수고하셨습니다!';
+      document.getElementById('displayExerciseName').textContent = '정말 수고하셨습니다!';
       document.getElementById('nextBox').classList.add('hidden');
       
       const circle = document.getElementById('progressCircle');
       circle.style.strokeDashoffset = 0;
       circle.setAttribute('stroke', '#10b981');
+      document.getElementById('circleContainer').className = 'relative flex items-center justify-center my-3';
 
       playBeep(880, 0.5);
       speak("모든 운동을 완료했습니다. 정말 수고하셨습니다!");
@@ -1159,61 +1054,57 @@
       const exInfo = document.getElementById('displayExInfo');
       const circle = document.getElementById('progressCircle');
       const nextBox = document.getElementById('nextBox');
-      const container = document.getElementById('timerContainer');
-      const totalExCount = exercises.length;
+      const circleContainer = document.getElementById('circleContainer');
 
       nextBox.classList.remove('hidden');
       timeText.textContent = timeLeft;
       setInfo.textContent = `세트 ${currentSet} / ${totalSets}`;
 
-      // 펄스 애니메이션 초기화
-      if (container) {
-        container.classList.remove('pulse-rhythm', 'pulse-urgent');
-      }
+      circleContainer.classList.remove('pulse-rhythm', 'pulse-urgent');
 
       if (currentPhase === 'READY') {
         badge.textContent = '준비';
-        badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-amber-100 text-amber-800 mb-1.5';
-        exName.textContent = '준비';
-        exInfo.textContent = '운동 시작 준비';
-        nextName.textContent = exercises[0]?.name || '1번 동작';
+        badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-amber-100 text-amber-800 mb-1';
+        exName.textContent = '운동 준비';
+        exInfo.textContent = '시작 전 10초';
+        nextName.textContent = getExName(0);
         circle.setAttribute('stroke', '#f59e0b');
       } else if (currentPhase === 'WORK') {
+        exName.textContent = getExName(currentEx - 1);
+        exInfo.textContent = `동작 ${currentEx} / ${totalExercises}`;
+
         if (timeLeft <= 5) {
           badge.textContent = '스퍼트! 🔥';
-          badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-rose-600 text-white animate-bounce mb-1.5 shadow-md shadow-rose-500/40';
-          if (container) container.classList.add('pulse-urgent');
+          badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-rose-500 text-white mb-1 shadow-md';
+          circleContainer.classList.add('pulse-urgent');
         } else {
           badge.textContent = '운동 중 🔥';
-          badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-rose-100 text-rose-700 mb-1.5';
-          if (container) container.classList.add('pulse-rhythm');
+          badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-rose-100 text-rose-700 mb-1';
+          circleContainer.classList.add('pulse-rhythm');
         }
-
-        exName.textContent = exercises[currentEx - 1]?.name || `동작 ${currentEx}`;
-        exInfo.textContent = `동작 ${currentEx} / ${totalExCount}`;
         
-        if (currentEx < totalExCount) {
-          nextName.textContent = exercises[currentEx]?.name || '';
+        if (currentEx < totalExercises) {
+          nextName.textContent = getExName(currentEx);
         } else if (currentSet < totalSets) {
-          nextName.textContent = `[다음 ${currentSet + 1}세트] ${exercises[0]?.name || ''}`;
+          nextName.textContent = `[다음 세트] ${getExName(0)}`;
         } else {
           nextName.textContent = '마지막 동작입니다!';
         }
-        circle.setAttribute('stroke', timeLeft <= 5 ? '#dc2626' : '#ef4444');
+        circle.setAttribute('stroke', '#ef4444');
       } else if (currentPhase === 'REST') {
-        badge.textContent = '동작 휴식 ☕';
-        badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-blue-100 text-blue-700 mb-1.5';
+        badge.textContent = '휴식 ☕';
+        badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-blue-100 text-blue-700 mb-1';
         exName.textContent = '숨 고르기';
-        exInfo.textContent = `동작 ${currentEx} / ${totalExCount}`;
-        nextName.textContent = exercises[currentEx - 1]?.name || '';
+        exInfo.textContent = `동작 ${currentEx} / ${totalExercises}`;
+        nextName.textContent = getExName(currentEx) || getExName(0);
         circle.setAttribute('stroke', '#3b82f6');
       } else if (currentPhase === 'SET_REST') {
         badge.textContent = '세트 휴식 ⏳';
-        badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-indigo-100 text-indigo-700 mb-1.5';
-        exName.textContent = `${currentSet}세트 준비`;
-        exInfo.textContent = `동작 1 / ${totalExCount}`;
-        nextName.textContent = exercises[0]?.name || '';
-        circle.setAttribute('stroke', '#6366f1');
+        badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-purple-100 text-purple-700 mb-1';
+        exName.textContent = `세트 ${currentSet - 1} 완료!`;
+        exInfo.textContent = `다음: 세트 ${currentSet}`;
+        nextName.textContent = `[새 세트] ${getExName(0)}`;
+        circle.setAttribute('stroke', '#8b5cf6');
       }
 
       const fraction = phaseTotalTime > 0 ? (timeLeft / phaseTotalTime) : 0;
@@ -1223,6 +1114,11 @@
 
     function togglePause() {
       isPaused = !isPaused;
+      if (isPaused) {
+        stopHeartbeatScheduler();
+      } else if (currentPhase === 'WORK') {
+        startHeartbeatSchedulerForCurrentSecond(timeLeft);
+      }
       updatePauseUI();
     }
 
@@ -1241,6 +1137,7 @@
 
     function stopWorkout() {
       clearInterval(timerInterval);
+      stopHeartbeatScheduler();
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       releaseWakeLock();
 
