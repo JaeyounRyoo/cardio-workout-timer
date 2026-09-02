@@ -542,6 +542,12 @@
     const DEFAULT_PRESET_NAMES = Object.values(WORKOUT_PRESETS).map(p => p.name);
 
     window.addEventListener('DOMContentLoaded', () => {
+      // 페이지 초기화 시 항상 설정 화면이 먼저 보이도록 명시적 처리
+      const setupView = document.getElementById('setupView');
+      const timerView = document.getElementById('timerView');
+      if (setupView) setupView.classList.remove('hidden');
+      if (timerView) timerView.classList.add('hidden');
+
       cleanAndSyncRoutines();
       loadSavedSettings();
       updateRoutineSelect();
@@ -1112,36 +1118,26 @@
       }
     }
 
-    function speak(text) {
-      if (!document.getElementById('voiceGuide').checked) return;
-      if (!('speechSynthesis' in window)) return;
-      
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ko-KR';
-      utterance.rate = 1.05;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-
-      // 음성 시작 시 배경음악 볼륨 자동 낮춤 (오디오 더킹)
-      duckMusic(true);
-      utterance.onend = () => { duckMusic(false); };
-      utterance.onerror = () => { duckMusic(false); };
-
-      window.speechSynthesis.speak(utterance);
+    function duckMusic(factor = 0.25) {
+      if (!bgAudio) return;
+      if (typeof factor === 'boolean') {
+        factor = factor ? 0.25 : 1.0;
+      }
+      isDucking = factor < 1.0;
+      bgAudio.volume = targetBgVolume * factor;
     }
 
-    function playBeep(freq = 600, duration = 0.15) {
-      if (!document.getElementById('voiceGuide').checked) return;
+    // ================== 카운트다운 비프음 신시사이저 ==================
+    function playBeep(freq = 440, duration = 0.15) {
       try {
         const ctx = getAudioContext();
         if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = 'triangle';
+        osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(0.85, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+        gain.gain.setValueAtTime(0.35, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start();
@@ -1149,74 +1145,54 @@
       } catch (e) {}
     }
 
-    // ================== 경쾌한 전진/행진곡 사운드 신시사이저 ==================
-    function playMarchKick(time = 0) {
+    // ================== 한국어 음성 안내 (TTS) ==================
+    function speak(text) {
+      if (!document.getElementById('voiceGuide')?.checked) return;
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ko-KR';
+      utterance.rate = 1.05;
+      duckMusic(0.25);
+      utterance.onend = () => { duckMusic(1.0); };
+      utterance.onerror = () => { duckMusic(1.0); };
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // ================== 사실적인 심장박동 (두근-두근) 사운드 신시사이저 ==================
+    function playHeartbeat(time = 0) {
+      if (!document.getElementById('beatSound')?.checked) return;
       try {
         const ctx = getAudioContext();
         if (!ctx) return;
         const t = time || ctx.currentTime;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(150, t);
-        osc.frequency.exponentialRampToValueAtTime(38, t + 0.12);
-        gain.gain.setValueAtTime(0.7, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.12);
+        
+        // 1st pulse: "두" (낮고 묵직한 심실 수축음)
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(68, t);
+        osc1.frequency.exponentialRampToValueAtTime(30, t + 0.12);
+        gain1.gain.setValueAtTime(0.75, t);
+        gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(t);
+        osc1.stop(t + 0.12);
+
+        // 2nd pulse: "근" (약 0.16초 뒤 울리는 두 번째 심음)
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(78, t + 0.16);
+        osc2.frequency.exponentialRampToValueAtTime(36, t + 0.28);
+        gain2.gain.setValueAtTime(0.55, t + 0.16);
+        gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(t + 0.16);
+        osc2.stop(t + 0.28);
       } catch (e) {}
-    }
-
-    function playMarchSnare(time = 0, isAccent = true) {
-      try {
-        const ctx = getAudioContext();
-        if (!ctx || !noiseBuffer) return;
-        const t = time || ctx.currentTime;
-        
-        const noise = ctx.createBufferSource();
-        noise.buffer = noiseBuffer;
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'highpass';
-        filter.frequency.setValueAtTime(1200, t);
-        
-        const noiseGain = ctx.createGain();
-        const vol = isAccent ? 0.45 : 0.22;
-        noiseGain.gain.setValueAtTime(vol, t);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, t + (isAccent ? 0.14 : 0.07));
-        
-        noise.connect(filter);
-        filter.connect(noiseGain);
-        noiseGain.connect(ctx.destination);
-        noise.start(t);
-        noise.stop(t + (isAccent ? 0.14 : 0.07));
-
-        const osc = ctx.createOscillator();
-        const oscGain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(isAccent ? 240 : 200, t);
-        osc.frequency.exponentialRampToValueAtTime(100, t + 0.08);
-        oscGain.gain.setValueAtTime(isAccent ? 0.35 : 0.15, t);
-        oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-        osc.connect(oscGain);
-        oscGain.connect(ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.08);
-      } catch (e) {}
-    }
-
-    // 정확히 1초마다 울리는 규칙 비트 (쿵/딱 교차)
-    function playOneSecBeat(secLeft) {
-      if (!document.getElementById('beatSound').checked) return;
-      // 사용자 MP3 음원이 등록되어 재생 중일 때는 1초 비트를 생략하여 음악에 집중
-      if (bgAudio && !bgAudio.paused) return;
-
-      if (secLeft % 2 === 0) {
-        playMarchKick();
-      } else {
-        playMarchSnare(0, true);
-      }
     }
 
     async function requestWakeLock() {
@@ -1419,6 +1395,9 @@
       document.getElementById('displayExerciseName').textContent = '정말 수고하셨습니다!';
       document.getElementById('nextBox').classList.add('hidden');
       
+      const finishBox = document.getElementById('finishActionBox');
+      if (finishBox) finishBox.classList.remove('hidden');
+
       const circle = document.getElementById('progressCircle');
       circle.style.strokeDashoffset = 0;
       circle.setAttribute('stroke', '#10b981');
@@ -1579,8 +1558,13 @@
       duckMusic(false);
       releaseWakeLock();
 
+      const finishBox = document.getElementById('finishActionBox');
+      if (finishBox) finishBox.classList.add('hidden');
+
       document.getElementById('timerView').classList.add('hidden');
       document.getElementById('setupView').classList.remove('hidden');
+      updateDurationSummaries();
+      lucide.createIcons();
     }
   </script>
 </body>
