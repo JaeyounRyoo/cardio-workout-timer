@@ -1441,7 +1441,7 @@
         badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-amber-100 text-amber-800 mb-1';
         exName.textContent = getExName(0);
         exInfo.textContent = '첫 동작 준비 (10초)';
-        nextName.textContent = getExName(1) || '운동 시작';
+        nextName.textContent = getExName(0);
         circle.setAttribute('stroke', '#f59e0b');
       } else if (currentPhase === 'WORK') {
         exName.textContent = getExName(currentEx - 1);
@@ -1470,20 +1470,14 @@
         badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-blue-100 text-blue-700 mb-1';
         exName.textContent = getExName(currentEx - 1);
         exInfo.textContent = `휴식 중 (다음: 동작 ${currentEx} / ${totalExercises})`;
-        if (currentEx < totalExercises) {
-          nextName.textContent = getExName(currentEx);
-        } else if (currentSet < totalSets) {
-          nextName.textContent = `[다음 세트] ${getExName(0)}`;
-        } else {
-          nextName.textContent = '마지막 동작 준비!';
-        }
+        nextName.textContent = getExName(currentEx - 1);
         circle.setAttribute('stroke', '#3b82f6');
       } else if (currentPhase === 'SET_REST') {
         badge.textContent = '세트 휴식 ⏳ (다음 준비)';
         badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-purple-100 text-purple-700 mb-1';
         exName.textContent = getExName(0);
         exInfo.textContent = `세트 휴식 (다음: 세트 ${currentSet})`;
-        nextName.textContent = getExName(1) || '세트 시작';
+        nextName.textContent = `[다음 세트] ${getExName(0)}`;
         circle.setAttribute('stroke', '#8b5cf6');
       }
 
