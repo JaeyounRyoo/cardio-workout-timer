@@ -1492,17 +1492,17 @@
     function skipExercise() {
       if (currentPhase === 'FINISHED') return;
       
-      // 실행 중이던 마칭 음악/음성 정리
+      // 진행 중인 행진곡 및 음성 즉시 중단
       stopMarchingCadence();
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       
-      // 일시정지 상태였다면 재개
+      // 일시정지 상태였다면 해제
       if (isPaused) {
         isPaused = false;
         updatePauseUI();
       }
       
-      // 현재 단계를 즉시 종료하고 다음 단계로 강제 전환
+      // 다음 단계로 강제 전환
       handlePhaseTransition();
     }
 
