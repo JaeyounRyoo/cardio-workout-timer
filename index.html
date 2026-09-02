@@ -229,6 +229,48 @@
         </div>
       </div>
 
+      <!-- 타바타 배경음악 (MP3 믹싱) 카드 -->
+      <div class="bg-gradient-to-r from-teal-50 to-emerald-50 p-3.5 rounded-2xl border border-teal-200/90 space-y-2.5 shadow-xs">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-teal-500 text-white flex items-center justify-center shadow-sm shadow-teal-500/30 shrink-0">
+              <i data-lucide="music" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black text-teal-900 flex items-center gap-1">
+                타바타 음악 (MP3 믹싱)
+                <span class="text-[9px] font-bold bg-teal-200/70 text-teal-800 px-1.5 py-0.5 rounded-md">권장</span>
+              </div>
+              <div class="text-[10px] text-teal-600 font-medium">30초 운동 시 재생 & 10초 휴식 시 일시정지</div>
+            </div>
+          </div>
+
+          <!-- 음원 선택 버튼 (파일 업로더) -->
+          <label class="cursor-pointer bg-teal-600 hover:bg-teal-700 text-white text-xs font-extrabold px-3 py-2 rounded-xl shadow-sm transition active:scale-95 flex items-center gap-1.5 shrink-0">
+            <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+            <span>음원 선택</span>
+            <input type="file" id="bgMusicInput" accept="audio/*" onchange="handleMusicUpload(event)" class="hidden">
+          </label>
+        </div>
+
+        <!-- 음원 등록 시 나타나는 제어 패널 -->
+        <div id="bgMusicControls" class="hidden bg-white/90 p-2.5 rounded-xl border border-teal-100 flex flex-col gap-2">
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-1.5 min-w-0 flex-1">
+              <i data-lucide="file-audio" class="w-4 h-4 text-teal-600 shrink-0"></i>
+              <span id="bgMusicName" class="font-bold text-slate-700 truncate text-xs">선택된 음원 없음</span>
+            </div>
+            <button type="button" onclick="removeBgMusic()" class="shrink-0 text-rose-500 hover:text-rose-700 p-1 rounded-lg hover:bg-rose-50 transition" title="음원 제거">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-[10px] font-bold text-slate-400 shrink-0">음악 볼륨</span>
+            <input type="range" id="bgMusicVolume" min="0" max="1" step="0.05" value="0.6" oninput="setBgMusicVolume(this.value)" class="w-full accent-teal-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer">
+          </div>
+        </div>
+      </div>
+
       <!-- 옵션 토글들 -->
       <div class="space-y-2 pt-1">
         <!-- 음성 가이드 -->
