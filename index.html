@@ -526,12 +526,12 @@
         sets: 3,
         setRestTime:60,
         exercises: [
-          { name: 'Squat + Reverse Lunge', time:30 },
-          { name: 'Squat + Foward Lunge', time:30 },
-          { name: 'Half Burpee', time:30 },
-          { name: 'Squat Floor Tap', time:30 },
-          { name: 'Squat Jump', time:30 },
-          { name: 'Squat Pause', time:30 }
+          { name: '스쿼트 + 후진 런지', time:30 },
+          { name: '스쿼트 + 전진 런지', time:30 },
+          { name: '버피', time:30 },
+          { name: '점핑 스쿼트', time:30 },
+          { name: '와이드 스쿼트', time:30 },
+          { name: '스쿼트 유지', time:30 }
         ]
       },
       belly: {
@@ -541,12 +541,12 @@
         sets:3,
         setRestTime:60,
         exercises: [
-          { name: 'Jumping Jack', time: 30 },
-          { name: 'Alt Knee Taps', time: 30 },
-          { name: 'High Knee Claps', time: 30 },
-          { name: 'Alt Toe Touch Crunches', time: 30 },
-          { name: 'Alt Knee Crunches', time: 30 },
-          { name: 'Side Knee Crunches', time: 30 }
+          { name: '팔 벌려 뛰기', time: 30 },
+          { name: '반대 무릎 터치', time: 30 },
+          { name: '허벅지 아래에서 박수', time: 30 },
+          { name: '다리 뻗어 발 터치', time: 30 },
+          { name: '무릎 크로스 크런치', time: 30 },
+          { name: '옆구리 크런치', time: 30 }
         ]
       },
       abs: {
@@ -556,12 +556,12 @@
         sets: 3,
         setRestTime: 60,
         exercises: [
-          { name: 'Crunches(Upper Abs)', time:30 },
-          { name: 'Leg Raises(Lower Abs)', time:30 },
-          { name: 'Cross Crunches(Full Abs)', time:30 },
-          { name: 'Heel Taps(Obliques)', time:30 },
-          { name: 'Toe Touches(Upper Abs)', time:30 },
-          { name: 'V-Ups(Upper+Lower)', time:30 }
+          { name: '무릎 구부리고 터치하기', time:30 },
+          { name: '레그 레이즈', time:30 },
+          { name: '크로스 크런치', time:30 },
+          { name: '발꿈치 터치', time:30 },
+          { name: '발가락 터치', time:30 },
+          { name: 'V-Ups', time:30 }
         ]
       },
       plank: {
@@ -571,9 +571,9 @@
         sets:3,
         setRestTime:60,
         exercises: [          
-          { name: 'Mountain Climbers', time: 30 },
-          { name: 'Plank Jumps', time: 30 },
-          { name: 'Plank Hip Dips', time: 30 },
+          { name: '마운틴 크라이머', time: 30 },
+          { name: '플랭크 점프', time: 30 },
+          { name: '플랭크 골반 기울이기(Plank Hip Dips)', time: 30 },
           { name: 'Plank Alt Knee Crunches(다리를 가슴으로)', time: 30 },
           { name: 'Plank Side Knee Crunches(다리를 옆구리로)', time: 30 },
           { name: 'Side Kick Through(다리를 팔 사이로)', time: 30 },
@@ -594,6 +594,7 @@
       loadSavedSettings();
       updateRoutineSelect();
       updateDurationSummaries();
+      initAudioDB(); // 인앱 음원 저장소 로드
       lucide.createIcons();
     });
 
@@ -1081,6 +1082,80 @@
       }
     }
 
+    // ================== 내 타바타 음악 (MP3) 인앱(In-App) 영구 저장소 ==================
+    const DB_NAME = 'TabataAudioDB';
+    const DB_STORE = 'audio_files';
+
+    function openAudioDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(DB_STORE)) {
+            db.createObjectStore(DB_STORE);
+          }
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = (e) => reject(e);
+      });
+    }
+
+    async function saveMusicToDB(file) {
+      try {
+        const db = await openAudioDB();
+        const tx = db.transaction(DB_STORE, 'readwrite');
+        const store = tx.objectStore(DB_STORE);
+        store.put({ blob: file, name: file.name }, 'custom_bg_music');
+      } catch (e) {
+        console.error('음원 영구 저장 실패:', e);
+      }
+    }
+
+    async function loadBgMusicFromDB() {
+      try {
+        const db = await openAudioDB();
+        const tx = db.transaction(DB_STORE, 'readonly');
+        const store = tx.objectStore(DB_STORE);
+        const req = store.get('custom_bg_music');
+        req.onsuccess = () => {
+          const data = req.result;
+          if (data && data.blob) {
+            if (userBgMusicUrl) URL.revokeObjectURL(userBgMusicUrl);
+            userBgMusicUrl = URL.createObjectURL(data.blob);
+            userBgMusicName = data.name;
+
+            if (!bgAudio) {
+              bgAudio = new Audio();
+              bgAudio.loop = true;
+            }
+            bgAudio.src = userBgMusicUrl;
+            bgAudio.volume = targetBgVolume;
+
+            const controls = document.getElementById('bgMusicControls');
+            const nameEl = document.getElementById('bgMusicName');
+            if (controls) controls.classList.remove('hidden');
+            if (nameEl) nameEl.textContent = `[인앱 내장됨] ${userBgMusicName}`;
+            lucide.createIcons();
+          }
+        };
+      } catch (e) {
+        console.error('인앱 음원 로드 실패:', e);
+      }
+    }
+
+    async function deleteMusicFromDB() {
+      try {
+        const db = await openAudioDB();
+        const tx = db.transaction(DB_STORE, 'readwrite');
+        const store = tx.objectStore(DB_STORE);
+        store.delete('custom_bg_music');
+      } catch (e) {}
+    }
+
+    function initAudioDB() {
+      loadBgMusicFromDB();
+    }
+
     // ================== 내 타바타 음악 (MP3) 믹싱 제어 ==================
     function handleMusicUpload(event) {
       const file = event.target.files?.[0];
@@ -1100,9 +1175,12 @@
       bgAudio.src = userBgMusicUrl;
       bgAudio.volume = targetBgVolume;
 
+      // 브라우저 내부 DB에 영구 저장 (다음 번 실행 시에도 자동 로드)
+      saveMusicToDB(file);
+
       document.getElementById('bgMusicControls').classList.remove('hidden');
-      document.getElementById('bgMusicName').textContent = userBgMusicName;
-      showToast(`'${file.name}' 음원이 등록되었습니다.`);
+      document.getElementById('bgMusicName').textContent = `[인앱 내장됨] ${userBgMusicName}`;
+      showToast(`'${file.name}' 음원이 인앱으로 영구 저장되었습니다.`);
       lucide.createIcons();
     }
 
@@ -1117,6 +1195,7 @@
         userBgMusicUrl = null;
       }
       userBgMusicName = '';
+      deleteMusicFromDB(); // DB에서도 삭제
       document.getElementById('bgMusicControls').classList.add('hidden');
       document.getElementById('bgMusicInput').value = '';
       showToast('배경음원이 해제되었습니다.');
@@ -1202,7 +1281,7 @@
     }
 
     // ================== 사실적인 심장박동 (두근-두근) 사운드 신시사이저 ==================
-    // 모바일/노트북 스피커에서도 흉부를 때리듯 묵직하고 선명하게 들리도록 배음 및 펀치감 대폭 강화
+    // 처음 요청하신 자연스럽고 차분한 볼륨과 부드러운 저음 톤으로 복원
     function playHeartbeat(time = 0) {
       if (!document.getElementById('beatSound')?.checked) return;
       try {
@@ -1210,58 +1289,32 @@
         if (!ctx) return;
         const t = time || ctx.currentTime;
         
-        // ---------------- [1st Pulse: "두" - 심실 수축 묵직한 타격음] ----------------
-        // 1-1. 메인 중저음 (모바일 스피커가 재생 가능한 115Hz -> 50Hz 대역)
+        // 1st Pulse: "두" (심실 수축 - 부드러운 저음)
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
-        osc1.type = 'triangle'; // sine보다 배음이 풍부하여 작은 스피커에서도 선명하게 들림
-        osc1.frequency.setValueAtTime(115, t);
-        osc1.frequency.exponentialRampToValueAtTime(48, t + 0.14);
-        gain1.gain.setValueAtTime(1.8, t); // 볼륨 대폭 상향 (기존 0.75 -> 1.8)
-        gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(68, t);
+        osc1.frequency.exponentialRampToValueAtTime(32, t + 0.12);
+        gain1.gain.setValueAtTime(0.75, t); // 원래의 자연스러운 볼륨(0.75)으로 복원
+        gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
         osc1.connect(gain1);
         gain1.connect(ctx.destination);
         osc1.start(t);
-        osc1.stop(t + 0.14);
+        osc1.stop(t + 0.12);
 
-        // 1-2. 초저음 바디감 (웅장한 베이스 울림)
-        const subOsc1 = ctx.createOscillator();
-        const subGain1 = ctx.createGain();
-        subOsc1.type = 'sine';
-        subOsc1.frequency.setValueAtTime(75, t);
-        subOsc1.frequency.exponentialRampToValueAtTime(35, t + 0.15);
-        subGain1.gain.setValueAtTime(1.4, t);
-        subGain1.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-        subOsc1.connect(subGain1);
-        subGain1.connect(ctx.destination);
-        subOsc1.start(t);
-        subOsc1.stop(t + 0.15);
-
-        // ---------------- [2nd Pulse: "근" - 약 0.18초 뒤 울리는 판막 폐쇄음] ----------------
+        // 2nd Pulse: "근" (약 0.18초 뒤 심실 이완)
         const t2 = t + 0.18;
         const osc2 = ctx.createOscillator();
         const gain2 = ctx.createGain();
-        osc2.type = 'triangle';
-        osc2.frequency.setValueAtTime(130, t2);
-        osc2.frequency.exponentialRampToValueAtTime(55, t2 + 0.13);
-        gain2.gain.setValueAtTime(1.3, t2); // 볼륨 대폭 상향 (기존 0.55 -> 1.3)
-        gain2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.13);
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(78, t2);
+        osc2.frequency.exponentialRampToValueAtTime(38, t2 + 0.10);
+        gain2.gain.setValueAtTime(0.55, t2); // 원래의 자연스러운 볼륨(0.55)으로 복원
+        gain2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.10);
         osc2.connect(gain2);
         gain2.connect(ctx.destination);
         osc2.start(t2);
-        osc2.stop(t2 + 0.13);
-
-        const subOsc2 = ctx.createOscillator();
-        const subGain2 = ctx.createGain();
-        subOsc2.type = 'sine';
-        subOsc2.frequency.setValueAtTime(85, t2);
-        subOsc2.frequency.exponentialRampToValueAtTime(40, t2 + 0.14);
-        subGain2.gain.setValueAtTime(1.0, t2);
-        subGain2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.14);
-        subOsc2.connect(subGain2);
-        subGain2.connect(ctx.destination);
-        subOsc2.start(t2);
-        subOsc2.stop(t2 + 0.14);
+        osc2.stop(t2 + 0.10);
 
       } catch (e) {}
     }
