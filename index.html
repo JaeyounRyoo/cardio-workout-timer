@@ -1160,6 +1160,7 @@
     }
 
     // ================== 사실적인 심장박동 (두근-두근) 사운드 신시사이저 ==================
+    // 모바일/노트북 스피커에서도 흉부를 때리듯 묵직하고 선명하게 들리도록 배음 및 펀치감 대폭 강화
     function playHeartbeat(time = 0) {
       if (!document.getElementById('beatSound')?.checked) return;
       try {
@@ -1167,31 +1168,59 @@
         if (!ctx) return;
         const t = time || ctx.currentTime;
         
-        // 1st pulse: "두" (낮고 묵직한 심실 수축음)
+        // ---------------- [1st Pulse: "두" - 심실 수축 묵직한 타격음] ----------------
+        // 1-1. 메인 중저음 (모바일 스피커가 재생 가능한 115Hz -> 50Hz 대역)
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(68, t);
-        osc1.frequency.exponentialRampToValueAtTime(30, t + 0.12);
-        gain1.gain.setValueAtTime(0.75, t);
-        gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+        osc1.type = 'triangle'; // sine보다 배음이 풍부하여 작은 스피커에서도 선명하게 들림
+        osc1.frequency.setValueAtTime(115, t);
+        osc1.frequency.exponentialRampToValueAtTime(48, t + 0.14);
+        gain1.gain.setValueAtTime(1.8, t); // 볼륨 대폭 상향 (기존 0.75 -> 1.8)
+        gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
         osc1.connect(gain1);
         gain1.connect(ctx.destination);
         osc1.start(t);
-        osc1.stop(t + 0.12);
+        osc1.stop(t + 0.14);
 
-        // 2nd pulse: "근" (약 0.16초 뒤 울리는 두 번째 심음)
+        // 1-2. 초저음 바디감 (웅장한 베이스 울림)
+        const subOsc1 = ctx.createOscillator();
+        const subGain1 = ctx.createGain();
+        subOsc1.type = 'sine';
+        subOsc1.frequency.setValueAtTime(75, t);
+        subOsc1.frequency.exponentialRampToValueAtTime(35, t + 0.15);
+        subGain1.gain.setValueAtTime(1.4, t);
+        subGain1.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        subOsc1.connect(subGain1);
+        subGain1.connect(ctx.destination);
+        subOsc1.start(t);
+        subOsc1.stop(t + 0.15);
+
+        // ---------------- [2nd Pulse: "근" - 약 0.18초 뒤 울리는 판막 폐쇄음] ----------------
+        const t2 = t + 0.18;
         const osc2 = ctx.createOscillator();
         const gain2 = ctx.createGain();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(78, t + 0.16);
-        osc2.frequency.exponentialRampToValueAtTime(36, t + 0.28);
-        gain2.gain.setValueAtTime(0.55, t + 0.16);
-        gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(130, t2);
+        osc2.frequency.exponentialRampToValueAtTime(55, t2 + 0.13);
+        gain2.gain.setValueAtTime(1.3, t2); // 볼륨 대폭 상향 (기존 0.55 -> 1.3)
+        gain2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.13);
         osc2.connect(gain2);
         gain2.connect(ctx.destination);
-        osc2.start(t + 0.16);
-        osc2.stop(t + 0.28);
+        osc2.start(t2);
+        osc2.stop(t2 + 0.13);
+
+        const subOsc2 = ctx.createOscillator();
+        const subGain2 = ctx.createGain();
+        subOsc2.type = 'sine';
+        subOsc2.frequency.setValueAtTime(85, t2);
+        subOsc2.frequency.exponentialRampToValueAtTime(40, t2 + 0.14);
+        subGain2.gain.setValueAtTime(1.0, t2);
+        subGain2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.14);
+        subOsc2.connect(subGain2);
+        subGain2.connect(ctx.destination);
+        subOsc2.start(t2);
+        subOsc2.stop(t2 + 0.14);
+
       } catch (e) {}
     }
 
