@@ -104,7 +104,7 @@
           <button onclick="applyWorkoutPreset('squat')" class="py-1.5 px-2.5 rounded-xl text-xs font-extrabold bg-violet-100/80 text-violet-800 hover:bg-violet-200 border border-violet-200/60 transition active:scale-95 text-center">하체</button>
           <button onclick="applyWorkoutPreset('belly')" class="py-1.5 px-2.5 rounded-xl text-xs font-extrabold bg-rose-100/80 text-rose-800 hover:bg-rose-200 border border-rose-200/60 transition active:scale-95 text-center">서서뱃살</button>
           <button onclick="applyWorkoutPreset('abs')" class="py-1.5 px-2.5 rounded-xl text-xs font-extrabold bg-pink-100/80 text-pink-800 hover:bg-pink-200 border border-pink-200/60 transition active:scale-95 text-center">누워뱃살</button>
-          <button onclick="applyWorkoutPreset('plank')" class="py-1.5 px-2.5 rounded-xl text-xs font-extrabold bg-amber-100/80 text-amber-800 hover:bg-amber-200 border border-amber-200/60 transition active:scale-95 text-center">전신(플랭크)</button>
+          <button onclick="applyWorkoutPreset('plank')" class="py-1.5 px-2.5 rounded-xl text-xs font-extrabold bg-amber-100/80 text-amber-800 hover:bg-amber-200 border border-amber-200/60 transition active:scale-95 text-center">코어(플랭크)</button>
         </div>
       </div>
 
@@ -1278,8 +1278,8 @@
 
       updateTimerDisplay();
 
-      // 등록된 내 타바타 배경음악 재생 시작
-      startBgMusic();
+      // 시작 준비 10초에는 음원을 멈추고 심장소리만 유지
+      pauseBgMusic();
 
       // '운동준비' 멘트 전에 다음 운동 미리 알려주기
       const firstExerciseName = getExName(0);
@@ -1294,19 +1294,39 @@
 
       // 누적 시간 카운팅
       totalElapsedSeconds++;
+
+      // 1. 운동 중 (30초 운동): 음원 재생 유지 + 1초 심장소리
       if (currentPhase === 'WORK') {
         totalWorkoutSeconds++;
-        // 운동 중 정확히 1초마다 규칙적인 쿵-딱 비트 사운드 재생 (마지막 3초 전까지)
-        if (timeLeft > 3) {
-          playOneSecBeat(timeLeft);
+
+        // 음원이 일시정지되어 있다면 운동 중 재생 재개
+        if (bgAudio && bgAudio.paused && userBgMusicUrl) {
+          startBgMusic();
+        }
+
+        // 1초 고정 비트: 쿵/딱 대신 사실적인 심장박동(두근-두근) 사운드
+        playHeartbeat();
+
+        // 마지막 5초: 음원 볼륨을 부드럽게 45%로 낮추고(믹싱), 뚜렷한 카운트다운 비프음 믹스
+        if (timeLeft <= 5 && timeLeft > 0) {
+          duckMusic(0.45);
+          playBeep(480 + (5 - timeLeft) * 90, 0.16);
+        } else if (timeLeft > 5) {
+          duckMusic(1.0);
+        }
+      } 
+      // 2. 휴식 중 (10초 휴식 / 세트 휴식 / 시작 준비): 음원 정지 + 심장소리만 재생
+      else if (currentPhase === 'REST' || currentPhase === 'SET_REST' || currentPhase === 'READY') {
+        pauseBgMusic();
+        playHeartbeat(); // 10초 휴식에는 그냥 심장소리만 울림
+
+        // 휴식 종료 3초 전 카운트다운 비프
+        if (timeLeft <= 3 && timeLeft > 0) {
+          playBeep(440 + (4 - timeLeft) * 80, 0.12);
         }
       }
 
       timeLeft--;
-
-      if (timeLeft <= 3 && timeLeft > 0) {
-        playBeep(440 + (4 - timeLeft) * 80, 0.12);
-      }
 
       if (timeLeft < 0) {
         handlePhaseTransition();
@@ -1324,7 +1344,8 @@
         phaseTotalTime = targetTime;
         playBeep(880, 0.3);
         speak(`${getExName(0)}, 시작!`);
-        playOneSecBeat(timeLeft);
+        duckMusic(1.0);
+        startBgMusic(); // 30초 운동 시작 시 음원 재생 시작!
       } 
       else if (currentPhase === 'WORK') {
         if (currentEx === totalExercises) {
@@ -1339,6 +1360,7 @@
               currentPhase = 'SET_REST';
               timeLeft = setRestTime;
               phaseTotalTime = setRestTime;
+              pauseBgMusic(); // 세트 휴식 시 음원 중지, 심장소리만 들림
               playBeep(550, 0.3);
               speak(`세트 완료. ${setRestTime}초간 휴식입니다. 다음 세트 첫 동작은 ${nextFirstEx}입니다.`);
             } else {
@@ -1348,7 +1370,7 @@
               phaseTotalTime = targetTime;
               playBeep(880, 0.3);
               speak(`세트 ${currentSet}, ${nextFirstEx} 시작!`);
-              playOneSecBeat(timeLeft);
+              startBgMusic();
             }
           }
         } else {
@@ -1358,6 +1380,7 @@
             currentPhase = 'REST';
             timeLeft = restTime;
             phaseTotalTime = restTime;
+            pauseBgMusic(); // 10초 휴식 시작 즉시 음원 멈춤, 심장소리만 유지
             playBeep(520, 0.25);
             speak(`휴식. 다음 운동은 ${nextExName}입니다.`);
           } else {
@@ -1367,7 +1390,7 @@
             phaseTotalTime = targetTime;
             playBeep(880, 0.3);
             speak(`${nextExName}, 시작!`);
-            playOneSecBeat(timeLeft);
+            startBgMusic();
           }
         }
       } 
@@ -1378,7 +1401,8 @@
         phaseTotalTime = targetTime;
         playBeep(880, 0.3);
         speak(`${getExName(currentEx - 1)}, 시작!`);
-        playOneSecBeat(timeLeft);
+        duckMusic(1.0);
+        startBgMusic(); // 10초 휴식 후 30초 운동으로 전환 시 음원 재생!
       }
 
       updateTimerDisplay();
