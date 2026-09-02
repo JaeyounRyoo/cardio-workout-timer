@@ -355,13 +355,13 @@
   <!-- 토스트 알림 메시지 팝업 -->
   <div id="toast" class="hidden fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800/90 backdrop-blur-md text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-2xl z-50 pointer-events-none flex items-center gap-2">
     <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i>
-    <span id="toastMsg">알림</span>
-  </div>
-
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
   <script>
     let timerInterval = null;
-    let heartbeatInterval = null;
+    let musicInterval = null;
+    let musicStep = 0;
     let audioCtx = null;
+    let noiseBuffer = null;
     let wakeLock = null;
     let isPaused = false;
     let lastFocusedIndex = 0;
@@ -975,12 +975,24 @@
     function getAudioContext() {
       if (!audioCtx) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) audioCtx = new AudioCtx();
+        if (AudioCtx) {
+          audioCtx = new AudioCtx();
+          initNoiseBuffer(audioCtx);
+        }
       }
       if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
       return audioCtx;
+    }
+
+    function initNoiseBuffer(ctx) {
+      const bufferSize = ctx.sampleRate * 1;
+      noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
     }
 
     function speak(text) {
@@ -1014,35 +1026,164 @@
       } catch (e) {}
     }
 
-    function playHeartbeatBeat(isUrgent = false) {
-      if (!document.getElementById('beatSound').checked) return;
+    // ================== 경쾌한 전진/행진곡 사운드 신시사이저 ==================
+    function playMarchKick(time = 0) {
       try {
         const ctx = getAudioContext();
         if (!ctx) return;
-        const now = ctx.currentTime;
+        const t = time || ctx.currentTime;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'triangle';
-
-        const baseFreq = isUrgent ? 360 : 260;
-        osc.frequency.setValueAtTime(baseFreq, now);
-        osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
-
-        const volume = isUrgent ? 0.9 : 0.75;
-        gain.gain.setValueAtTime(volume, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-
+        osc.frequency.setValueAtTime(150, t);
+        osc.frequency.exponentialRampToValueAtTime(38, t + 0.12);
+        gain.gain.setValueAtTime(0.7, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.08);
+        osc.start(t);
+        osc.stop(t + 0.12);
       } catch (e) {}
     }
 
-    function stopHeartbeatScheduler() {
-      if (heartbeatInterval) {
-        clearInterval(heartbeatInterval);
-        heartbeatInterval = null;
+    function playMarchSnare(time = 0, isAccent = true) {
+      try {
+        const ctx = getAudioContext();
+        if (!ctx || !noiseBuffer) return;
+        const t = time || ctx.currentTime;
+        
+        // 노이즈 스네어 성분
+        const noise = ctx.createBufferSource();
+        noise.buffer = noiseBuffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(1200, t);
+        
+        const noiseGain = ctx.createGain();
+        const vol = isAccent ? 0.45 : 0.22;
+        noiseGain.gain.setValueAtTime(vol, t);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, t + (isAccent ? 0.14 : 0.07));
+        
+        noise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+        noise.start(t);
+        noise.stop(t + (isAccent ? 0.14 : 0.07));
+
+        // 스네어 바디 톤 성분
+        const osc = ctx.createOscillator();
+        const oscGain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(isAccent ? 240 : 200, t);
+        osc.frequency.exponentialRampToValueAtTime(100, t + 0.08);
+        oscGain.gain.setValueAtTime(isAccent ? 0.35 : 0.15, t);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+        osc.connect(oscGain);
+        oscGain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.08);
+      } catch (e) {}
+    }
+
+    function playMarchBrassNote(freq, time = 0, duration = 0.12) {
+      try {
+        const ctx = getAudioContext();
+        if (!ctx || !freq) return;
+        const t = time || ctx.currentTime;
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc1.type = 'sawtooth';
+        osc2.type = 'triangle';
+        osc1.frequency.setValueAtTime(freq, t);
+        osc2.frequency.setValueAtTime(freq * 1.003, t);
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1800, t);
+        filter.frequency.exponentialRampToValueAtTime(600, t + duration);
+
+        gain.gain.setValueAtTime(0.28, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(t);
+        osc2.start(t);
+        osc1.stop(t + duration);
+        osc2.stop(t + duration);
+      } catch (e) {}
+    }
+
+    // 경쾌한 행진곡 멜로디 시퀀스 (C Major 행진 팡파르)
+    const MARCH_MELODY = [
+      261.63, 0, 329.63, 0, 392.00, 392.00, 523.25, 0,
+      392.00, 0, 329.63, 0, 261.63, 329.63, 392.00, 0,
+      349.23, 0, 440.00, 0, 523.25, 523.25, 587.33, 0,
+      523.25, 0, 392.00, 0, 329.63, 293.66, 261.63, 0
+    ];
+
+    function stepMarchingCadence() {
+      if (!document.getElementById('beatSound').checked) return;
+      if (currentPhase !== 'WORK' || isPaused) return;
+
+      const step16 = musicStep % 16;
+      const step32 = musicStep % 32;
+
+      // 1. 킥 드럼 (정박 1, 3拍 쿵!)
+      if (step16 === 0 || step16 === 8) {
+        playMarchKick();
+      }
+
+      // 2. 마칭 스네어 (2, 4拍 딱! & 중간 마칭 롤)
+      if (step16 === 4 || step16 === 12) {
+        playMarchSnare(0, true);
+      } else if (step16 === 2 || step16 === 6 || step16 === 10 || step16 === 14) {
+        // 행진 스네어 잔음 롤
+        playMarchSnare(0, false);
+      }
+
+      // 스퍼트 구간(5초 이하)에는 스네어 연타 가속
+      if (timeLeft <= 5 && (step16 % 2 === 1)) {
+        playMarchSnare(0, false);
+      }
+
+      // 3. 경쾌한 브라스 멜로디
+      const noteFreq = MARCH_MELODY[step32];
+      if (noteFreq) {
+        const pitchMultiplier = timeLeft <= 5 ? 1.25 : (timeLeft <= 10 ? 1.12 : 1.0);
+        playMarchBrassNote(noteFreq * pitchMultiplier, 0, 0.11);
+      }
+
+      musicStep++;
+    }
+
+    function startMarchingCadence() {
+      stopMarchingCadence();
+      if (!document.getElementById('beatSound').checked) return;
+      if (currentPhase !== 'WORK' || isPaused) return;
+
+      // 평소: 125ms (~120BPM), 10초 이하: 105ms (~142BPM), 5초 이하: 85ms (~176BPM 행진 스퍼트)
+      let intervalMs = 125;
+      if (timeLeft <= 5) {
+        intervalMs = 85;
+      } else if (timeLeft <= 10) {
+        intervalMs = 105;
+      }
+
+      musicInterval = setInterval(() => {
+        stepMarchingCadence();
+      }, intervalMs);
+    }
+
+    function stopMarchingCadence() {
+      if (musicInterval) {
+        clearInterval(musicInterval);
+        musicInterval = null;
       }
     }
 
@@ -1121,6 +1262,7 @@
       currentPhase = 'READY';
       timeLeft = 10;
       phaseTotalTime = 10;
+      musicStep = 0;
 
       updateTimerDisplay();
 
@@ -1129,7 +1271,7 @@
       speak(`첫 번째 운동은 ${firstExerciseName}입니다. 운동을 준비하세요. 10초 전`);
 
       clearInterval(timerInterval);
-      stopHeartbeatScheduler();
+      stopMarchingCadence();
       timerInterval = setInterval(timerTick, 1000);
     }
 
@@ -1144,8 +1286,9 @@
 
       timeLeft--;
 
-      if (currentPhase === 'WORK') {
-        startHeartbeatSchedulerForCurrentSecond(timeLeft);
+      // 10초 및 5초 시점에 행진곡 템포 가속 재설정
+      if (currentPhase === 'WORK' && (timeLeft === 10 || timeLeft === 5)) {
+        startMarchingCadence();
       }
 
       if (timeLeft <= 3 && timeLeft > 0) {
@@ -1153,7 +1296,7 @@
       }
 
       if (timeLeft < 0) {
-        stopHeartbeatScheduler();
+        stopMarchingCadence();
         handlePhaseTransition();
       } else {
         updateTimerDisplay();
@@ -1167,11 +1310,13 @@
         const targetTime = exercises[0]?.time || defaultWorkTime;
         timeLeft = targetTime;
         phaseTotalTime = targetTime;
+        musicStep = 0;
         playBeep(880, 0.3);
         speak(`${getExName(0)}, 시작!`);
-        startHeartbeatSchedulerForCurrentSecond(timeLeft);
+        startMarchingCadence();
       } 
       else if (currentPhase === 'WORK') {
+        stopMarchingCadence();
         if (currentEx === totalExercises) {
           if (currentSet === totalSets) {
             finishWorkout();
@@ -1185,16 +1330,16 @@
               timeLeft = setRestTime;
               phaseTotalTime = setRestTime;
               playBeep(550, 0.3);
-              // 휴식시간 시작하자마자 다음 운동 미리 알려주기
               speak(`세트 완료. ${setRestTime}초간 휴식입니다. 다음 세트 첫 동작은 ${nextFirstEx}입니다.`);
             } else {
               currentPhase = 'WORK';
               const targetTime = exercises[0]?.time || defaultWorkTime;
               timeLeft = targetTime;
               phaseTotalTime = targetTime;
+              musicStep = 0;
               playBeep(880, 0.3);
               speak(`세트 ${currentSet}, ${nextFirstEx} 시작!`);
-              startHeartbeatSchedulerForCurrentSecond(timeLeft);
+              startMarchingCadence();
             }
           }
         } else {
@@ -1205,16 +1350,16 @@
             timeLeft = restTime;
             phaseTotalTime = restTime;
             playBeep(520, 0.25);
-            // 휴식시간 시작하자마자 다음 운동 미리 알려주기
             speak(`휴식. 다음 운동은 ${nextExName}입니다.`);
           } else {
             currentPhase = 'WORK';
             const targetTime = exercises[currentEx - 1]?.time || defaultWorkTime;
             timeLeft = targetTime;
             phaseTotalTime = targetTime;
+            musicStep = 0;
             playBeep(880, 0.3);
             speak(`${nextExName}, 시작!`);
-            startHeartbeatSchedulerForCurrentSecond(timeLeft);
+            startMarchingCadence();
           }
         }
       } 
@@ -1223,9 +1368,10 @@
         const targetTime = exercises[currentEx - 1]?.time || defaultWorkTime;
         timeLeft = targetTime;
         phaseTotalTime = targetTime;
+        musicStep = 0;
         playBeep(880, 0.3);
         speak(`${getExName(currentEx - 1)}, 시작!`);
-        startHeartbeatSchedulerForCurrentSecond(timeLeft);
+        startMarchingCadence();
       }
 
       updateTimerDisplay();
@@ -1233,7 +1379,7 @@
 
     function finishWorkout() {
       clearInterval(timerInterval);
-      stopHeartbeatScheduler();
+      stopMarchingCadence();
       releaseWakeLock();
 
       currentPhase = 'FINISHED';
@@ -1336,9 +1482,9 @@
     function togglePause() {
       isPaused = !isPaused;
       if (isPaused) {
-        stopHeartbeatScheduler();
+        stopMarchingCadence();
       } else if (currentPhase === 'WORK') {
-        startHeartbeatSchedulerForCurrentSecond(timeLeft);
+        startMarchingCadence();
       }
       updatePauseUI();
     }
@@ -1346,8 +1492,8 @@
     function skipExercise() {
       if (currentPhase === 'FINISHED') return;
       
-      // 실행 중이던 비트음/음성 정리
-      stopHeartbeatScheduler();
+      // 실행 중이던 마칭 음악/음성 정리
+      stopMarchingCadence();
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       
       // 일시정지 상태였다면 재개
@@ -1375,7 +1521,7 @@
 
     function stopWorkout() {
       clearInterval(timerInterval);
-      stopHeartbeatScheduler();
+      stopMarchingCadence();
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       releaseWakeLock();
 
