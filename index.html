@@ -101,8 +101,32 @@
           <button onclick="applyWorkoutPreset('morning')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-emerald-100/80 text-emerald-800 hover:bg-emerald-200 border border-emerald-200/60 transition active:scale-95 text-center whitespace-nowrap">기상전</button>
           <button onclick="applyWorkoutPreset('lunch')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-blue-100/80 text-blue-800 hover:bg-blue-200 border border-blue-200/60 transition active:scale-95 text-center whitespace-nowrap">점심의자</button>
           <button onclick="applyWorkoutPreset('night')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-indigo-100/80 text-indigo-800 hover:bg-indigo-200 border border-indigo-200/60 transition active:scale-95 text-center whitespace-nowrap">취침전</button>
-          <button onclick="applyWorkoutPreset('belly')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-rose-100/80 text-rose-800 hover:bg-rose-200 border border-rose-200/60 transition active:scale-95 text-center whitespace-nowrap">뱃살빼기</button>
+          <button onclick="applyWorkoutPreset('squat')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-violet-100/80 text-violet-800 hover:bg-violet-200 border border-violet-200/60 transition active:scale-95 text-center whitespace-nowrap">하체</button>
+          <button onclick="applyWorkoutPreset('belly')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-rose-100/80 text-rose-800 hover:bg-rose-200 border border-rose-200/60 transition active:scale-95 text-center whitespace-nowrap">서서뱃살</button>
+          <button onclick="applyWorkoutPreset('abs')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-pink-100/80 text-pink-800 hover:bg-pink-200 border border-pink-200/60 transition active:scale-95 text-center whitespace-nowrap">누워뱃살</button>
           <button onclick="applyWorkoutPreset('plank')" class="shrink-0 py-1.5 px-3 rounded-xl text-xs font-extrabold bg-amber-100/80 text-amber-800 hover:bg-amber-200 border border-amber-200/60 transition active:scale-95 text-center whitespace-nowrap">전신(플랭크)</button>
+        </div>
+      </div>
+
+      <!-- 예상 총 소요시간 및 운동시간 요약 카드 -->
+      <div class="grid grid-cols-2 gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 p-3 rounded-2xl border border-emerald-100/80">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+            <i data-lucide="clock" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <div class="text-[10px] font-bold text-slate-400">전체 소요시간</div>
+            <div id="setupTotalDurationText" class="text-xs sm:text-sm font-black text-emerald-700">0분 00초</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+            <i data-lucide="zap" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <div class="text-[10px] font-bold text-slate-400">순수 운동시간</div>
+            <div id="setupWorkDurationText" class="text-xs sm:text-sm font-black text-rose-700">0분 00초</div>
+          </div>
         </div>
       </div>
 
@@ -248,13 +272,35 @@
     <!-- ==================== 2. 타이머 실행 화면 (RUNNING VIEW) ==================== -->
     <div id="timerView" class="hidden p-5 flex flex-col items-center justify-between min-h-[550px] bg-gradient-to-b from-white via-slate-50 to-slate-100">
       
-      <!-- 상단 정보 헤더 -->
-      <div class="w-full flex items-center justify-between text-xs font-bold text-slate-500">
-        <div class="bg-white/90 shadow-sm border border-slate-200 px-3 py-1.5 rounded-full" id="displaySetInfo">
-          세트 1 / 1
+      <!-- 최상단 루틴 이름 표시 -->
+      <div class="w-full flex items-center justify-between pb-2 border-b border-slate-200/70">
+        <div class="flex items-center gap-1.5">
+          <i data-lucide="dumbbell" class="w-4 h-4 text-emerald-600"></i>
+          <span id="displayRoutineNameText" class="text-sm font-black text-slate-800 truncate max-w-[220px]">맞춤 루틴</span>
         </div>
-        <div class="bg-white/90 shadow-sm border border-slate-200 px-3 py-1.5 rounded-full" id="displayExInfo">
-          동작 1 / 5
+        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">PLAYING</span>
+      </div>
+
+      <!-- 누적 시간 및 세트/동작 정보 헤더 -->
+      <div class="w-full space-y-2 mt-2">
+        <div class="grid grid-cols-2 gap-2 text-center">
+          <div class="bg-white/90 border border-slate-200 p-2 rounded-2xl shadow-xs">
+            <div class="text-[10px] font-bold text-slate-400">전체 소요시간</div>
+            <div id="displayTotalElapsed" class="text-xs font-black text-slate-700 font-mono">00:00 / 00:00</div>
+          </div>
+          <div class="bg-white/90 border border-slate-200 p-2 rounded-2xl shadow-xs">
+            <div class="text-[10px] font-bold text-rose-500">순수 운동시간</div>
+            <div id="displayWorkElapsed" class="text-xs font-black text-rose-600 font-mono">00:00 / 00:00</div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs font-bold text-slate-500">
+          <div class="bg-white/90 shadow-sm border border-slate-200 px-3 py-1.5 rounded-full" id="displaySetInfo">
+            세트 1 / 1
+          </div>
+          <div class="bg-white/90 shadow-sm border border-slate-200 px-3 py-1.5 rounded-full" id="displayExInfo">
+            동작 1 / 5
+          </div>
         </div>
       </div>
 
@@ -333,11 +379,18 @@
     let currentPhase = 'READY';
     let timeLeft = 10;
     let phaseTotalTime = 10;
+    let activeRoutineTitle = '맞춤 루틴';
+
+    // 누적 시간 추적 변수
+    let totalElapsedSeconds = 0;
+    let totalWorkoutSeconds = 0;
+    let plannedTotalSeconds = 0;
+    let plannedWorkSeconds = 0;
 
     const CIRCLE_RADIUS = 102;
     const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
 
-    // 표준 5대 기본 루틴 정의 (단일 정본)
+    // 표준 6대 기본 루틴 정의 (단일 정본)
     const WORKOUT_PRESETS = {
       morning: {
         name: '기상전 누워서 스트레칭',
@@ -367,7 +420,7 @@
         name: '점심 후 의자에서 허리 운동',
         workTime: 30,
         restTime: 0,
-        sets: 1,
+        sets: 3,
         setRestTime: 30,
         exercises: [
           { name: '왼발 오른 무릎위 전굴자세', time: 30 },
@@ -375,7 +428,7 @@
           { name: '오른발 왼 무릎위 전굴자세', time: 30 },
           { name: '오른 무릎 세우고 트위스트', time: 30 },
           { name: '가슴 깍지 트위스트', time: 60 },
-          { name: '머리 깍지 무릎 크로스', time: 60 },
+          { name: '머리 깍지 무릎 크런치', time: 60 },
           { name: '머리 깍지 옆구리 늘리기', time: 60 },
           { name: '한팔 반대 무릎 바깥쪽 터치', time: 60 }
         ]
@@ -406,6 +459,21 @@
           { name: '왼발 비둘기 자세', time: 30 }
         ]
       },
+      squat: {
+        name: '하체(스쿼트)',
+        workTime: 20,
+        restTime: 10,
+        sets: 3,
+        setRestTime: 30,
+        exercises: [
+          { name: 'Squat + Rvs Lunge', time: 20 },
+          { name: 'Squat + Fwd Lunge', time: 20 },
+          { name: 'Half Burpee', time: 20 },
+          { name: 'Squat Floor Tap', time: 20 },
+          { name: 'Squat Jump', time: 20 },
+          { name: 'Squat Pause', time: 20 }
+        ]
+      },
       belly: {
         name: '서서 뱃살빼기',
         workTime: 30,
@@ -413,28 +481,45 @@
         sets: 1,
         setRestTime: 30,
         exercises: [
-          { name: '팔뻗어 무릎당기기', time: 30 },
-          { name: '무릎 팔꿈치 크로스 터치', time: 30 },
-          { name: '사이드 니업', time: 30 },
-          { name: '서서 발끝 터치', time: 30 },
-          { name: '트위스트 점프', time: 30 },
-          { name: '스탠딩 크런치', time: 30 }
+          { name: 'Jumping Jack', time: 30 },
+          { name: 'Alt Knee Taps', time: 30 },
+          { name: 'High Knee Claps', time: 30 },
+          { name: 'Alt Toe Touch Crunches', time: 30 },
+          { name: 'Alt Knee Crunches', time: 30 },
+          { name: 'Side Knee Crunches', time: 30 }
+        ]
+      },
+      abs: {
+        name: '누워서 뱃살빼기',
+        workTime: 20,
+        restTime: 10,
+        sets: 3,
+        setRestTime: 30,
+        exercises: [
+          { name: 'Crunches(Upper Abs)', time: 20 },
+          { name: 'Leg Raises(Lower Abs)', time: 20 },
+          { name: 'Cross Crunches(Full Abs)', time: 20 },
+          { name: 'Heel Taps(Obliques)', time: 20 },
+          { name: 'Toe Touches(Upper Abs)', time: 20 },
+          { name: 'V-Ups(Upper+Lower)', time: 20 }
         ]
       },
       plank: {
-        name: '전신 운동(Plank)',
-        workTime: 60,
+        name: '코어 운동(Plank)',
+        workTime: 30,
         restTime: 0,
         sets: 1,
         setRestTime: 30,
-        exercises: [
-          { name: '도그자세', time: 30 },
-          { name: '햄스트링 늘리기', time: 30 },
-          { name: '플랭크', time: 60 },
-          { name: '다리 가슴으로 당기기', time: 60 },
-          { name: '옆구리로 당기기', time: 60 },
-          { name: '팔굽혀 펴기', time: 60 },
-          { name: '버피', time: 60 }
+        exercises: [          
+          { name: 'Downward Dog to Cobra(도그자세)', time: 30 },
+          { name: 'Squat to Stand(햄스트링 늘리기)', time: 30 },
+          { name: 'Mountain Climbers', time: 30 },
+          { name: 'Plank Jumps', time: 30 },
+          { name: 'Plank Hip Dips', time: 30 },
+          { name: 'Plank Alt Knee Crunches(다리를 가슴으로)', time: 30 },
+          { name: 'Plank Side Knee Crunches(다리를 옆구리로)', time: 30 },
+          { name: 'Side Kick Through(다리를 팔 사이로)', time: 30 },
+          { name: 'Plank Reach Outs', time: 30 }
         ]
       }
     };
@@ -445,8 +530,62 @@
       cleanAndSyncRoutines();
       loadSavedSettings();
       updateRoutineSelect();
+      updateDurationSummaries();
       lucide.createIcons();
     });
+
+    // 시간 포맷 헬퍼 (초 -> MM:SS 또는 M분 S초)
+    function formatTimeSec(seconds, format = 'colon') {
+      const sec = Math.max(0, Math.floor(seconds));
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      if (format === 'colon') {
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      }
+      if (m === 0) return `${s}초`;
+      return `${m}분 ${String(s).padStart(2, '0')}초`;
+    }
+
+    // 전체 소요시간 및 운동시간 계산 함수
+    function calculateRoutineDurations() {
+      const sCount = parseInt(document.getElementById('sets').value) || 1;
+      const rTime = parseInt(document.getElementById('restTime').value) || 0;
+      const srTime = parseInt(document.getElementById('setRestTime').value) || 0;
+      
+      const singleSetWorkTime = exercises.reduce((acc, cur) => {
+        return acc + (parseInt(cur.time) || defaultWorkTime);
+      }, 0);
+
+      const totalWorkTime = singleSetWorkTime * sCount;
+
+      // 1세트 내 동작 간 휴식: (동작 수 - 1) * 휴식시간
+      const singleSetRestTime = exercises.length > 1 ? (exercises.length - 1) * rTime : 0;
+      const totalExRestTime = singleSetRestTime * sCount;
+
+      // 세트 간 휴식: (세트 수 - 1) * 세트 휴식시간
+      const totalSetRestTime = sCount > 1 ? (sCount - 1) * srTime : 0;
+
+      // 총 소요시간 = 준비시간(10초) + 전체 운동시간 + 동작 간 휴식 + 세트 간 휴식
+      const totalDuration = 10 + totalWorkTime + totalExRestTime + totalSetRestTime;
+
+      return {
+        totalDuration,
+        totalWorkTime
+      };
+    }
+
+    // 설정 화면 소요시간 표시 업데이트
+    function updateDurationSummaries() {
+      const durations = calculateRoutineDurations();
+      plannedTotalSeconds = durations.totalDuration;
+      plannedWorkSeconds = durations.totalWorkTime;
+
+      const totalTextEl = document.getElementById('setupTotalDurationText');
+      const workTextEl = document.getElementById('setupWorkDurationText');
+
+      if (totalTextEl) totalTextEl.textContent = formatTimeSec(plannedTotalSeconds, 'korean');
+      if (workTextEl) workTextEl.textContent = formatTimeSec(plannedWorkSeconds, 'korean');
+    }
 
     function showToast(message) {
       const toast = document.getElementById('toast');
@@ -566,6 +705,7 @@
         beatSound: document.getElementById('beatSound').checked
       };
       localStorage.setItem('custom_timer_config', JSON.stringify(config));
+      updateDurationSummaries();
     }
 
     function saveExerciseValues() {
@@ -644,6 +784,7 @@
         container.appendChild(itemWrapper);
       });
 
+      updateDurationSummaries();
       lucide.createIcons();
     }
 
@@ -723,6 +864,7 @@
 
       const select = document.getElementById('routineSelect');
       if (select) select.value = preset.name;
+      activeRoutineTitle = preset.name;
 
       renderExerciseInputs();
       saveSettings();
@@ -777,9 +919,11 @@
       localStorage.setItem('custom_workout_routines', JSON.stringify(routines));
       updateRoutineSelect();
       select.value = name;
+      activeRoutineTitle = name;
       nameInput.value = '';
       hasResetOnRoutineInput = false;
       showToast(`'${name}' 루틴이 저장/수정되었습니다.`);
+      updateDurationSummaries();
     }
 
     function loadSelectedRoutine() {
@@ -801,6 +945,7 @@
         });
 
         document.getElementById('exercises').value = exercises.length;
+        activeRoutineTitle = name;
         renderExerciseInputs();
         saveSettings();
         showToast(`'${name}' 루틴을 불러왔습니다.`);
@@ -949,6 +1094,21 @@
       restTime = parseInt(document.getElementById('restTime').value);
       setRestTime = parseInt(document.getElementById('setRestTime').value);
 
+      // 루틴 이름 결정
+      const select = document.getElementById('routineSelect');
+      const inputName = document.getElementById('routineName').value.trim();
+      activeRoutineTitle = inputName || select.value || '맞춤 루틴';
+      
+      const routineNameText = document.getElementById('displayRoutineNameText');
+      if (routineNameText) routineNameText.textContent = activeRoutineTitle;
+
+      // 예상 소요시간 계산
+      const durations = calculateRoutineDurations();
+      plannedTotalSeconds = durations.totalDuration;
+      plannedWorkSeconds = durations.totalWorkTime;
+      totalElapsedSeconds = 0;
+      totalWorkoutSeconds = 0;
+
       document.getElementById('setupView').classList.add('hidden');
       document.getElementById('timerView').classList.remove('hidden');
 
@@ -963,7 +1123,10 @@
       phaseTotalTime = 10;
 
       updateTimerDisplay();
-      speak("운동을 준비하세요. 10초 전");
+
+      // '운동준비' 멘트 전에 다음 운동 미리 알려주기
+      const firstExerciseName = getExName(0);
+      speak(`첫 번째 운동은 ${firstExerciseName}입니다. 운동을 준비하세요. 10초 전`);
 
       clearInterval(timerInterval);
       stopHeartbeatScheduler();
@@ -972,6 +1135,12 @@
 
     function timerTick() {
       if (isPaused) return;
+
+      // 누적 시간 카운팅
+      totalElapsedSeconds++;
+      if (currentPhase === 'WORK') {
+        totalWorkoutSeconds++;
+      }
 
       timeLeft--;
 
@@ -1010,37 +1179,41 @@
           } else {
             currentSet++;
             currentEx = 1;
+            const nextFirstEx = getExName(0);
             if (setRestTime > 0) {
               currentPhase = 'SET_REST';
               timeLeft = setRestTime;
               phaseTotalTime = setRestTime;
               playBeep(550, 0.3);
-              speak(`세트 완료. ${setRestTime}초간 세트 휴식 시간입니다.`);
+              // 휴식시간 시작하자마자 다음 운동 미리 알려주기
+              speak(`세트 완료. ${setRestTime}초간 휴식입니다. 다음 세트 첫 동작은 ${nextFirstEx}입니다.`);
             } else {
               currentPhase = 'WORK';
               const targetTime = exercises[0]?.time || defaultWorkTime;
               timeLeft = targetTime;
               phaseTotalTime = targetTime;
               playBeep(880, 0.3);
-              speak(`세트 ${currentSet}, ${getExName(0)} 시작!`);
+              speak(`세트 ${currentSet}, ${nextFirstEx} 시작!`);
               startHeartbeatSchedulerForCurrentSecond(timeLeft);
             }
           }
         } else {
           currentEx++;
+          const nextExName = getExName(currentEx - 1);
           if (restTime > 0) {
             currentPhase = 'REST';
             timeLeft = restTime;
             phaseTotalTime = restTime;
             playBeep(520, 0.25);
-            speak(`휴식. 다음은 ${getExName(currentEx - 1)}`);
+            // 휴식시간 시작하자마자 다음 운동 미리 알려주기
+            speak(`휴식. 다음 운동은 ${nextExName}입니다.`);
           } else {
             currentPhase = 'WORK';
             const targetTime = exercises[currentEx - 1]?.time || defaultWorkTime;
             timeLeft = targetTime;
             phaseTotalTime = targetTime;
             playBeep(880, 0.3);
-            speak(`${getExName(currentEx - 1)}, 시작!`);
+            speak(`${nextExName}, 시작!`);
             startHeartbeatSchedulerForCurrentSecond(timeLeft);
           }
         }
@@ -1075,6 +1248,10 @@
       circle.setAttribute('stroke', '#10b981');
       document.getElementById('circleContainer').className = 'relative flex items-center justify-center my-3';
 
+      // 최종 시간 갱신
+      document.getElementById('displayTotalElapsed').textContent = `${formatTimeSec(totalElapsedSeconds)} / ${formatTimeSec(plannedTotalSeconds)}`;
+      document.getElementById('displayWorkElapsed').textContent = `${formatTimeSec(totalWorkoutSeconds)} / ${formatTimeSec(plannedWorkSeconds)}`;
+
       playBeep(880, 0.5);
       speak("모든 운동을 완료했습니다. 정말 수고하셨습니다!");
     }
@@ -1089,6 +1266,16 @@
       const circle = document.getElementById('progressCircle');
       const nextBox = document.getElementById('nextBox');
       const circleContainer = document.getElementById('circleContainer');
+
+      // 누적 진행 시간 / 총 계획 시간 표시
+      const totalElapsedEl = document.getElementById('displayTotalElapsed');
+      const workElapsedEl = document.getElementById('displayWorkElapsed');
+      if (totalElapsedEl) {
+        totalElapsedEl.textContent = `${formatTimeSec(totalElapsedSeconds)} / ${formatTimeSec(plannedTotalSeconds)}`;
+      }
+      if (workElapsedEl) {
+        workElapsedEl.textContent = `${formatTimeSec(totalWorkoutSeconds)} / ${formatTimeSec(plannedWorkSeconds)}`;
+      }
 
       nextBox.classList.remove('hidden');
       timeText.textContent = timeLeft;
@@ -1154,6 +1341,23 @@
         startHeartbeatSchedulerForCurrentSecond(timeLeft);
       }
       updatePauseUI();
+    }
+
+    function skipExercise() {
+      if (currentPhase === 'FINISHED') return;
+      
+      // 실행 중이던 비트음/음성 정리
+      stopHeartbeatScheduler();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      
+      // 일시정지 상태였다면 재개
+      if (isPaused) {
+        isPaused = false;
+        updatePauseUI();
+      }
+      
+      // 현재 단계를 즉시 종료하고 다음 단계로 강제 전환
+      handlePhaseTransition();
     }
 
     function updatePauseUI() {
