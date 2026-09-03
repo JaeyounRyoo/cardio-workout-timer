@@ -881,13 +881,9 @@
 
       const wrapper = document.getElementById('exerciseListWrapper');
       const icon = document.getElementById('exListToggleIcon');
-      const addBtn = document.getElementById('addExBtn');
 
       if (wrapper) {
         wrapper.classList.toggle('hidden', !isExerciseListOpen);
-      }
-      if (addBtn) {
-        addBtn.classList.toggle('hidden', !isExerciseListOpen);
       }
       if (icon) {
         icon.style.transform = isExerciseListOpen ? 'rotate(180deg)' : 'rotate(0deg)';
