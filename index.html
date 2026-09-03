@@ -1240,15 +1240,13 @@
       }
     }
 
-    function duckMusic(duck = true) {
+    function duckMusic(factor = 0.25) {
       if (!bgAudio) return;
-      isDucking = duck;
-      if (duck) {
-        // 음성 가이드 나올 때 음악 볼륨을 25% 수준으로 부드럽게 낮춤 (오디오 더킹)
-        bgAudio.volume = targetBgVolume * 0.25;
-      } else {
-        bgAudio.volume = targetBgVolume;
+      if (typeof factor === 'boolean') {
+        factor = factor ? 0.25 : 1.0;
       }
+      isDucking = factor < 1.0;
+      bgAudio.volume = targetBgVolume * factor;
     }
 
     function startBgMusic() {
@@ -1269,15 +1267,6 @@
         bgAudio.pause();
         bgAudio.currentTime = 0;
       }
-    }
-
-    function duckMusic(factor = 0.25) {
-      if (!bgAudio) return;
-      if (typeof factor === 'boolean') {
-        factor = factor ? 0.25 : 1.0;
-      }
-      isDucking = factor < 1.0;
-      bgAudio.volume = targetBgVolume * factor;
     }
 
     // ================== 카운트다운 비프음 신시사이저 ==================
