@@ -670,6 +670,7 @@
         plannedWorkSeconds = 0;
         if (totalTextEl) totalTextEl.textContent = '0분 00초';
         if (workTextEl) workTextEl.textContent = '0분 00초';
+        updateStartButtonState(false);
         return;
       }
 
@@ -679,6 +680,21 @@
 
       if (totalTextEl) totalTextEl.textContent = formatTimeSec(plannedTotalSeconds, 'korean');
       if (workTextEl) workTextEl.textContent = formatTimeSec(plannedWorkSeconds, 'korean');
+
+      updateStartButtonState(plannedTotalSeconds > 0);
+    }
+
+    function updateStartButtonState(isEnabled) {
+      const btn = document.getElementById('startWorkoutBtn');
+      if (!btn) return;
+
+      if (isEnabled) {
+        btn.disabled = false;
+        btn.className = 'w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-base rounded-2xl shadow-lg shadow-emerald-500/25 transition transform active:scale-98 flex items-center justify-center gap-2 cursor-pointer';
+      } else {
+        btn.disabled = true;
+        btn.className = 'w-full py-3.5 bg-slate-200 text-slate-400 font-extrabold text-base rounded-2xl cursor-not-allowed transition flex items-center justify-center gap-2';
+      }
     }
 
     function showToast(message) {
@@ -1369,6 +1385,13 @@
     }
 
     function startWorkout() {
+      const select = document.getElementById('routineSelect');
+      const isRoutineSelected = select && select.value.trim() !== '';
+      if (!isRoutineSelected || plannedTotalSeconds <= 0) {
+        showToast('먼저 운동 루틴을 선택해주세요.');
+        return;
+      }
+
       getAudioContext();
       saveExerciseValues();
       saveSettings();
