@@ -284,35 +284,35 @@
         </div>
       </div>
 
-      <!-- 옵션 토글들 -->
-      <div class="space-y-1.5">
-        <!-- 음성 가이드 -->
-        <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-2xl border border-slate-200/80">
-          <div class="flex items-center gap-2">
-            <i data-lucide="volume-2" class="w-4 h-4 text-emerald-600"></i>
-            <div>
-              <div class="text-xs font-bold text-slate-700">한국어 음성 및 알림음</div>
-              <div class="text-[10px] text-slate-400">동작 이름 음성 안내 및 비프음</div>
+      <!-- 옵션 토글들 (2열 한 줄 배치) -->
+      <div class="grid grid-cols-2 gap-2">
+        <!-- 한국어 음성 및 알림음 -->
+        <div class="flex items-center justify-between p-2 sm:p-2.5 bg-slate-50 rounded-2xl border border-slate-200/80 gap-1.5">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <i data-lucide="volume-2" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0"></i>
+            <div class="min-w-0">
+              <div class="text-[11px] sm:text-xs font-bold text-slate-700 truncate leading-tight">음성 & 알림음</div>
+              <div class="text-[9px] text-slate-400 truncate">안내음 및 비프음</div>
             </div>
           </div>
-          <label class="relative inline-flex items-center cursor-pointer">
+          <label class="relative inline-flex items-center cursor-pointer shrink-0">
             <input type="checkbox" id="voiceGuide" checked onchange="saveSettings()" class="sr-only peer">
-            <div class="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+            <div class="w-8 sm:w-9 h-4.5 sm:h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 sm:after:h-4 after:w-3.5 sm:after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
           </label>
         </div>
 
-        <!-- 심장박동 가속 비트 -->
-        <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-2xl border border-slate-200/80">
-          <div class="flex items-center gap-2">
-            <i data-lucide="heart-pulse" class="w-4 h-4 text-rose-500"></i>
-            <div>
-              <div class="text-xs font-bold text-slate-700">심장박동 사운드</div>
-              <div class="text-[10px] text-slate-400">1초 간격 자연스러운 두근-두근 박동</div>
+        <!-- 심장박동 사운드 -->
+        <div class="flex items-center justify-between p-2 sm:p-2.5 bg-slate-50 rounded-2xl border border-slate-200/80 gap-1.5">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <i data-lucide="heart-pulse" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 shrink-0"></i>
+            <div class="min-w-0">
+              <div class="text-[11px] sm:text-xs font-bold text-slate-700 truncate leading-tight">심장박동 사운드</div>
+              <div class="text-[9px] text-slate-400 truncate">1초 두근두근 박동</div>
             </div>
           </div>
-          <label class="relative inline-flex items-center cursor-pointer">
+          <label class="relative inline-flex items-center cursor-pointer shrink-0">
             <input type="checkbox" id="beatSound" checked onchange="saveSettings()" class="sr-only peer">
-            <div class="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
+            <div class="w-8 sm:w-9 h-4.5 sm:h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 sm:after:h-4 after:w-3.5 sm:after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
           </label>
         </div>
       </div>
