@@ -1452,10 +1452,10 @@
 
         playHeartbeat();
 
-        if (timeLeft <= 5 && timeLeft > 0) {
+        if (timeLeft <= 3 && timeLeft > 0) {
           duckMusic(0.45);
-          playBeep(480 + (5 - timeLeft) * 90, 0.16);
-        } else if (timeLeft > 5) {
+          playBeep(480 + (3 - timeLeft) * 90, 0.16);
+        } else if (timeLeft > 3) {
           duckMusic(1.0);
         }
       } 
@@ -1614,7 +1614,7 @@
         exName.textContent = getExName(currentEx - 1);
         exInfo.textContent = `동작 ${currentEx} / ${totalExercises}`;
 
-        if (timeLeft <= 5) {
+        if (timeLeft <= 3) {
           badge.textContent = '스퍼트! 🔥';
           badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-rose-500 text-white mb-1 shadow-md';
           circleContainer.classList.add('pulse-urgent');
