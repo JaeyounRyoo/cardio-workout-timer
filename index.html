@@ -365,13 +365,13 @@
         </div>
       </div>
 
-      <!-- 현재 진행 중인 운동 명칭 (가장 크게 강조) -->
-      <div class="w-full bg-white/95 rounded-2xl p-3 border border-slate-200/90 shadow-xs text-center flex flex-col items-center justify-center gap-0.5 mt-2">
-        <div class="flex items-center gap-1.5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
-          <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-          <span>현재 진행 동작</span>
+      <!-- 현재 진행 중인 운동 명칭 (가장 돋보이게 강렬한 그라데이션 적용) -->
+      <div class="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 rounded-2xl p-3.5 shadow-lg shadow-emerald-500/20 text-center flex flex-col items-center justify-center gap-0.5 mt-2 border border-emerald-400/60 text-white">
+        <div class="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-emerald-100">
+          <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+          <span>CURRENT EXERCISE · 현재 진행 동작</span>
         </div>
-        <div id="displayExerciseName" class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight break-keep leading-tight px-1 py-0.5 min-h-[38px] flex items-center justify-center">
+        <div id="displayExerciseName" class="text-2xl sm:text-3xl font-black tracking-tight break-keep leading-tight px-1 py-0.5 min-h-[38px] flex items-center justify-center text-white drop-shadow-xs">
           운동 준비
         </div>
       </div>
@@ -398,15 +398,15 @@
         </div>
       </div>
 
-      <!-- 다음 동작 안내 박스 (서브 정보로 알맞게 축소) -->
-      <div id="nextBox" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-2.5 sm:p-3 shadow-xs text-white flex flex-col gap-0.5 border border-emerald-400/80">
+      <!-- 다음 동작 안내 박스 (시선을 뺏지 않도록 차분한 톤다운 디자인 적용) -->
+      <div id="nextBox" class="w-full bg-slate-100/90 rounded-2xl p-2 sm:p-2.5 shadow-xs text-slate-600 flex flex-col gap-0.5 border border-slate-200/80">
         <div class="flex items-center justify-between">
-          <span class="bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-emerald-100 flex items-center gap-1">
-            <i data-lucide="arrow-right-circle" class="w-3 h-3"></i> NEXT STEP
+          <span class="bg-slate-200/80 text-slate-600 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+            <i data-lucide="arrow-right-circle" class="w-3 h-3 text-slate-400"></i> NEXT STEP
           </span>
-          <span class="text-[10px] text-emerald-100/80 font-medium">다음 순서 미리보기</span>
+          <span class="text-[10px] text-slate-400 font-semibold">다음 순서 미리보기</span>
         </div>
-        <div id="displayNextName" class="font-extrabold text-base sm:text-lg text-left truncate text-white py-0.5">
+        <div id="displayNextName" class="font-extrabold text-sm sm:text-base text-left truncate text-slate-700 py-0.5 px-0.5">
           동작 1
         </div>
       </div>
