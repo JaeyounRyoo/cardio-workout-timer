@@ -736,7 +736,7 @@
           restTime: preset.restTime,
           sets: preset.sets,
           setRestTime: preset.setRestTime,
-          exercises: [...preset.exercises],
+          exercises: JSON.parse(JSON.stringify(preset.exercises)),
           isDefault: true
         };
       });
@@ -834,7 +834,8 @@
         const timeInput = row.querySelector('.ex-time-input');
         updated.push({
           name: nameInput.value.trim(),
-          time: parseInt(timeInput.value) || parseInt(document.getElementById('workTime').value) || 30
+          time: parseInt(timeInput.value) || parseInt(document.getElementById('workTime').value) || 30,
+          media: exercises[idx]?.media || ''
         });
       });
       exercises = updated;
@@ -1630,17 +1631,21 @@
       const nextThumbWrapper = document.getElementById('nextThumbWrapper');
       const nextImg = document.getElementById('nextGuideImg');
 
+      if (!container || !currentImg) return;
+
       // 1. 현재 운동 가이드 GIF 로드
       const curMedia = exercises[currentExIndex]?.media;
-      if (curMedia && currentImg) {
+      if (curMedia) {
         const url = await getMediaUrl(curMedia);
         if (url) {
-          currentImg.onerror = () => { if (container) container.classList.add('hidden'); };
-          currentImg.onload = () => { if (container) container.classList.remove('hidden'); };
           currentImg.src = url;
+          container.classList.remove('hidden');
+          currentImg.onerror = () => {
+            container.classList.add('hidden');
+          };
         }
       } else {
-        if (container) container.classList.add('hidden');
+        container.classList.add('hidden');
       }
 
       // 2. 다음 운동 미리보기 썸네일 GIF 로드
@@ -1648,9 +1653,11 @@
       if (nextMedia && nextImg && nextThumbWrapper) {
         const thumbUrl = await getMediaUrl(nextMedia);
         if (thumbUrl) {
-          nextImg.onerror = () => { if (nextThumbWrapper) nextThumbWrapper.classList.add('hidden'); };
-          nextImg.onload = () => { if (nextThumbWrapper) nextThumbWrapper.classList.remove('hidden'); };
           nextImg.src = thumbUrl;
+          nextThumbWrapper.classList.remove('hidden');
+          nextImg.onerror = () => {
+            nextThumbWrapper.classList.add('hidden');
+          };
         }
       } else if (nextThumbWrapper) {
         nextThumbWrapper.classList.add('hidden');
