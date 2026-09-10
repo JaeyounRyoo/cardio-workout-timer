@@ -513,23 +513,23 @@
         ]
       },
       lunch: {
-        name: '점심 후 의자에서 허리 운동',
+        name: '점심 후 의자에서 복근 운동',
         workTime: 30,
         restTime: 5,
         sets: 3,
         setRestTime: 60,
         exercises: [
-          { name: '왼발 오른 무릎위 전굴자세', time: 30 },
-          { name: '왼 무릎 세우고 트위스트', time: 30 },
-          { name: '오른발 왼 무릎위 전굴자세', time: 30 },
-          { name: '오른 무릎 세우고 트위스트', time: 30 },
-          { name: '가슴 깍지 트위스트', time: 60 },
-          { name: '머리 깍지 반대 발꿈치 터치', time: 60 },
-          { name: '머리 깍지 다리 들고 박수', time: 60 },          
-          { name: '머리 깍지 무릎 크런치', time: 60 },
-          { name: '머리 깍지 옆구리 늘리기', time: 60 },
-          { name: '다리들어 크런치', time: 60 },
-          { name: '배영 발차기', time: 60 }          
+          { name: '왼발 오른 무릎위 전굴자세', time: 30, media: 'lunch_01.gif' },
+          { name: '왼 무릎 세우고 트위스트', time: 30, media: 'lunch_02.gif' },
+          { name: '오른발 왼 무릎위 전굴자세', time: 30, media: 'lunch_03.gif' },
+          { name: '오른 무릎 세우고 트위스트', time: 30, media: 'lunch_04.gif' },
+          { name: '가슴 깍지 트위스트', time: 60, media: 'lunch_05.gif' },
+          { name: '머리 깍지 반대 발꿈치 터치', time: 60, media: 'lunch_06.gif' },
+          { name: '머리 깍지 다리 들고 박수', time: 60, media: 'lunch_07.gif' },          
+          { name: '머리 깍지 무릎 크런치', time: 60, media: 'lunch_08.gif' },
+          { name: '머리 깍지 옆구리 늘리기', time: 60, media: 'lunch_09.gif' },
+          { name: '다리들어 크런치', time: 60, media: 'lunch_10.gif' },
+          { name: '배영 발차기', time: 60, media: 'lunch_11.gif' }          
         ]
       },
       night: {
@@ -1158,14 +1158,19 @@
     // ================== 내 타바타 음악 (MP3) 인앱(In-App) 영구 저장소 ==================
     const DB_NAME = 'TabataAudioDB';
     const DB_STORE = 'audio_files';
+    const DB_MEDIA_STORE = 'routine_media_files';
+    const mediaBlobCache = {};
 
     function openAudioDB() {
       return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, 1);
+        const req = indexedDB.open(DB_NAME, 2);
         req.onupgradeneeded = (e) => {
           const db = e.target.result;
           if (!db.objectStoreNames.contains(DB_STORE)) {
             db.createObjectStore(DB_STORE);
+          }
+          if (!db.objectStoreNames.contains(DB_MEDIA_STORE)) {
+            db.createObjectStore(DB_MEDIA_STORE);
           }
         };
         req.onsuccess = (e) => resolve(e.target.result);
@@ -1173,14 +1178,42 @@
       });
     }
 
-    async function saveMusicToDB(file) {
+    async function getMediaUrl(filename) {
+      if (!filename) return null;
+      if (mediaBlobCache[filename]) return mediaBlobCache[filename];
+
       try {
         const db = await openAudioDB();
-        const tx = db.transaction(DB_STORE, 'readwrite');
-        const store = tx.objectStore(DB_STORE);
-        store.put({ blob: file, name: file.name }, 'custom_bg_music');
+        const tx = db.transaction(DB_MEDIA_STORE, 'readonly');
+        const store = tx.objectStore(DB_MEDIA_STORE);
+        const req = store.get(filename);
+        return new Promise((resolve) => {
+          req.onsuccess = () => {
+            const result = req.result;
+            if (result && result.blob) {
+              const url = URL.createObjectURL(result.blob);
+              mediaBlobCache[filename] = url;
+              resolve(url);
+            } else {
+              // IndexedDB에 없으면 기본 파일 경로(lunch_XX.gif) 사용
+              resolve(filename);
+            }
+          };
+          req.onerror = () => resolve(filename);
+        });
+      } catch {
+        return filename;
+      }
+    }
+
+    async function saveMediaBlob(filename, blob) {
+      try {
+        const db = await openAudioDB();
+        const tx = db.transaction(DB_MEDIA_STORE, 'readwrite');
+        const store = tx.objectStore(DB_MEDIA_STORE);
+        store.put({ name: filename, blob: blob }, filename);
       } catch (e) {
-        console.error('음원 영구 저장 실패:', e);
+        console.error('미디어 저장 오류:', e);
       }
     }
 
@@ -1209,11 +1242,40 @@
             if (controls) controls.classList.remove('hidden');
             if (nameEl) nameEl.textContent = `[인앱 내장됨] ${userBgMusicName}`;
             lucide.createIcons();
+          } else {
+            // 저장된 음원이 없을 시 GitHub 저장소 내 기본 음원(Concrete_Grip_30s.mp3) 자동 감지
+            checkDefaultMusicFile();
           }
         };
+        req.onerror = () => checkDefaultMusicFile();
       } catch (e) {
-        console.error('인앱 음원 로드 실패:', e);
+        checkDefaultMusicFile();
       }
+    }
+
+    // GitHub Pages 또는 동일 폴더 내 기본 음원 자동 연결
+    function checkDefaultMusicFile() {
+      const defaultFileName = 'Concrete_Grip_30s.mp3';
+      const testAudio = new Audio();
+      testAudio.src = encodeURI(defaultFileName);
+      testAudio.addEventListener('canplaythrough', () => {
+        if (!userBgMusicUrl) {
+          userBgMusicUrl = encodeURI(defaultFileName);
+          userBgMusicName = defaultFileName;
+          if (!bgAudio) {
+            bgAudio = new Audio();
+            bgAudio.loop = true;
+          }
+          bgAudio.src = userBgMusicUrl;
+          bgAudio.volume = targetBgVolume;
+
+          const controls = document.getElementById('bgMusicControls');
+          const nameEl = document.getElementById('bgMusicName');
+          if (controls) controls.classList.remove('hidden');
+          if (nameEl) nameEl.textContent = `[기본 음원 연결됨] ${userBgMusicName}`;
+          lucide.createIcons();
+        }
+      }, { once: true });
     }
 
     async function deleteMusicFromDB() {
@@ -1560,34 +1622,40 @@
         duckMusic(1.0);
         startBgMusic();
       }
-
-      updateTimerDisplay();
     }
 
-    function finishWorkout() {
-      clearInterval(timerInterval);
-      releaseWakeLock();
+    async function updateGuideMedia(currentExIndex, nextExIndex) {
+      const container = document.getElementById('guidePlayerContainer');
+      const currentImg = document.getElementById('currentGuideImg');
+      const nextThumbWrapper = document.getElementById('nextThumbWrapper');
+      const nextImg = document.getElementById('nextGuideImg');
 
-      currentPhase = 'FINISHED';
-      document.getElementById('stateBadge').textContent = '운동 완료 🎉';
-      document.getElementById('stateBadge').className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-emerald-100 text-emerald-800 mb-1';
-      document.getElementById('displayTime').textContent = '완료!';
-      document.getElementById('displayExerciseName').textContent = '정말 수고하셨습니다!';
-      document.getElementById('nextBox').classList.add('hidden');
-      
-      const finishBox = document.getElementById('finishActionBox');
-      if (finishBox) finishBox.classList.remove('hidden');
+      // 1. 현재 운동 가이드 GIF 로드
+      const curMedia = exercises[currentExIndex]?.media;
+      if (curMedia && currentImg) {
+        const url = await getMediaUrl(curMedia);
+        if (url) {
+          currentImg.onerror = () => { if (container) container.classList.add('hidden'); };
+          currentImg.onload = () => { if (container) container.classList.remove('hidden'); };
+          currentImg.src = url;
+        }
+      } else {
+        if (container) container.classList.add('hidden');
+      }
 
-      const circle = document.getElementById('progressCircle');
-      circle.style.strokeDashoffset = 0;
-      circle.setAttribute('stroke', '#10b981');
-      document.getElementById('circleContainer').className = 'relative flex items-center justify-center my-3';
-
-      document.getElementById('displayTotalElapsed').textContent = `${formatTimeSec(totalElapsedSeconds)} / ${formatTimeSec(plannedTotalSeconds)}`;
-      document.getElementById('displayWorkElapsed').textContent = `${formatTimeSec(totalWorkoutSeconds)} / ${formatTimeSec(plannedWorkSeconds)}`;
-
-      playBeep(880, 0.5);
-      speak("모든 운동을 완료했습니다. 정말 수고하셨습니다!");
+      // 2. 다음 운동 미리보기 썸네일 GIF 로드
+      const nextMedia = (nextExIndex >= 0 && nextExIndex < exercises.length) ? exercises[nextExIndex]?.media : null;
+      if (nextMedia && nextImg && nextThumbWrapper) {
+        const thumbUrl = await getMediaUrl(nextMedia);
+        if (thumbUrl) {
+          nextImg.onerror = () => { if (nextThumbWrapper) nextThumbWrapper.classList.add('hidden'); };
+          nextImg.onload = () => { if (nextThumbWrapper) nextThumbWrapper.classList.remove('hidden'); };
+          nextImg.src = thumbUrl;
+        }
+      } else if (nextThumbWrapper) {
+        nextThumbWrapper.classList.add('hidden');
+      }
+      lucide.createIcons();
     }
 
     function updateTimerDisplay() {
@@ -1623,6 +1691,7 @@
         exInfo.textContent = '첫 동작 준비 (10초)';
         nextName.textContent = getExName(0);
         circle.setAttribute('stroke', '#f59e0b');
+        updateGuideMedia(0, 0);
       } else if (currentPhase === 'WORK') {
         exName.textContent = getExName(currentEx - 1);
         exInfo.textContent = `동작 ${currentEx} / ${totalExercises}`;
@@ -1637,14 +1706,18 @@
           circleContainer.classList.add('pulse-rhythm');
         }
         
+        let nextIndex = -1;
         if (currentEx < totalExercises) {
           nextName.textContent = getExName(currentEx);
+          nextIndex = currentEx;
         } else if (currentSet < totalSets) {
           nextName.textContent = `[다음 세트] ${getExName(0)}`;
+          nextIndex = 0;
         } else {
           nextName.textContent = '마지막 동작입니다!';
         }
         circle.setAttribute('stroke', '#ef4444');
+        updateGuideMedia(currentEx - 1, nextIndex);
       } else if (currentPhase === 'REST') {
         badge.textContent = '휴식 ☕ (다음 준비)';
         badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-blue-100 text-blue-700 mb-1';
@@ -1652,6 +1725,7 @@
         exInfo.textContent = `휴식 중 (다음: 동작 ${currentEx} / ${totalExercises})`;
         nextName.textContent = getExName(currentEx - 1);
         circle.setAttribute('stroke', '#3b82f6');
+        updateGuideMedia(currentEx - 1, currentEx < totalExercises ? currentEx : 0);
       } else if (currentPhase === 'SET_REST') {
         badge.textContent = '세트 휴식 ⏳ (다음 준비)';
         badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase bg-purple-100 text-purple-700 mb-1';
@@ -1659,6 +1733,7 @@
         exInfo.textContent = `세트 휴식 (다음: 세트 ${currentSet})`;
         nextName.textContent = `[다음 세트] ${getExName(0)}`;
         circle.setAttribute('stroke', '#8b5cf6');
+        updateGuideMedia(0, 0);
       }
 
       const fraction = phaseTotalTime > 0 ? (timeLeft / phaseTotalTime) : 0;
