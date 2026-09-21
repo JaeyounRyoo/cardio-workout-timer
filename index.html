@@ -99,7 +99,7 @@
         </div>
       </div>
 
-      <!-- 추천 프리셋 버튼 (스크롤 없이 전체 노출 + 인터벌러닝 포함) -->
+      <!-- 추천 프리셋 버튼 (인터벌 러닝 포함) -->
       <div class="bg-slate-50/80 p-2.5 rounded-2xl border border-slate-200/80 space-y-1.5">
         <div class="text-[10px] font-bold text-slate-400 flex items-center gap-1">
           <i data-lucide="sparkles" class="w-3 h-3 text-emerald-500"></i> 추천 루틴 바로가기
@@ -539,19 +539,19 @@
         sets: 1,
         setRestTime: 0,
         exercises: [
-          { name: '걷기 (6 km/h)', time: 120, cadence: 0 },
-          { name: '뛰기 (9 km/h)', time: 180, cadence: 180 },
-          { name: '걷기 (6 km/h)', time: 120, cadence: 0 },
-          { name: '뛰기 (12 km/h)', time: 120, cadence: 180 },
-          { name: '걷기 (6 km/h)', time: 120, cadence: 0 },
-          { name: '뛰기 (9 km/h)', time: 180, cadence: 180 },
-          { name: '걷기 (6 km/h)', time: 120, cadence: 0 },
-          { name: '뛰기 (12 km/h)', time: 120, cadence: 180 },
-          { name: '걷기 (6 km/h)', time: 120, cadence: 0 },
-          { name: '뛰기 (9 km/h)', time: 180, cadence: 180 },
-          { name: '걷기 (6 km/h)', time: 120, cadence: 0 },
-          { name: '뛰기 (12 km/h)', time: 120, cadence: 180 },
-          { name: '걷기 (6 km/h) 쿨다운', time: 180, cadence: 0 }
+          { name: '걷기 (6 km)', time: 120, cadence: 0 },
+          { name: '뛰기 (9 km)', time: 180, cadence: 180 },
+          { name: '걷기 (6 km)', time: 120, cadence: 0 },
+          { name: '뛰기 (12 km)', time: 120, cadence: 180 },
+          { name: '걷기 (6 km)', time: 120, cadence: 0 },
+          { name: '뛰기 (9 km)', time: 180, cadence: 180 },
+          { name: '걷기 (6 km)', time: 120, cadence: 0 },
+          { name: '뛰기 (12 km)', time: 120, cadence: 180 },
+          { name: '걷기 (6 km)', time: 120, cadence: 0 },
+          { name: '뛰기 (9 km)', time: 180, cadence: 180 },
+          { name: '걷기 (6 km)', time: 120, cadence: 0 },
+          { name: '뛰기 (12 km)', time: 120, cadence: 180 },
+          { name: '걷기 (6 km) 쿨다운', time: 180, cadence: 0 }
         ]
       },
       morning: {
@@ -1227,7 +1227,7 @@
       }
     }
 
-    // ================== 내 타바타 음악 (MP3) 인앱(In-App) 영구 저장소 ==================
+    // 내 타바타 음악 (MP3) 인앱(In-App) 영구 저장소
     const DB_NAME = 'TabataAudioDB';
     const DB_STORE = 'audio_files';
     const DB_MEDIA_STORE = 'routine_media_files';
@@ -1456,7 +1456,6 @@
       } catch (e) {}
     }
 
-    // ================== 180 SPM 러닝 캐이던스 비트 발생기 (333.33ms 주기) ==================
     function playCadenceClick(isAccent = false) {
       if (!document.getElementById('beatSound')?.checked) return;
       try {
@@ -1466,7 +1465,7 @@
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
 
-        // 경쾌하고 귀에 쏙 들어오는 우드블록 / 메트로놈 클릭 톤
+        // 경쾌한 우드블록 / 메트로놈 클릭 톤
         osc.type = 'triangle';
         const baseFreq = isAccent ? 1200 : 880;
         osc.frequency.setValueAtTime(baseFreq, t);
@@ -1528,7 +1527,6 @@
 
     function playHeartbeat(time = 0) {
       if (!document.getElementById('beatSound')?.checked) return;
-      // 러닝 180 캐이던스가 작동 중일 때는 심장소리와 겹치지 않게 캐이던스에 집중
       if (isCadenceActive) return;
 
       try {
@@ -1662,7 +1660,6 @@
           startBgMusic();
         }
 
-        // 현재 뛰기 동작이면 180 캐이던스 비트 작동, 아니면 일반 심장박동
         const currentIsRun = isRunningExercise(currentEx - 1);
         if (currentIsRun) {
           if (!isCadenceActive) startCadenceMetronome();
