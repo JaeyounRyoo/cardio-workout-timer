@@ -268,59 +268,52 @@
         </div>
       </div>
 
-      <!-- 옵션 토글들 (2열 한 줄 배치) -->
-      <div class="grid grid-cols-2 gap-2">
-        <div class="flex items-center justify-between p-2 sm:p-2.5 bg-slate-50 rounded-2xl border border-slate-200/80 gap-1.5">
-          <div class="flex items-center gap-1.5 min-w-0">
-            <i data-lucide="volume-2" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0"></i>
-            <div class="min-w-0">
-              <div class="text-[11px] sm:text-xs font-bold text-slate-700 truncate leading-tight">음성 & 알림음</div>
-              <div class="text-[9px] text-slate-400 truncate">안내음 및 비프음</div>
-            </div>
+      <!-- 옵션 3종 한 줄(3열 그리드) 컴팩트 배치 -->
+      <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
+        <!-- 1. 음성 & 알림음 -->
+        <div class="flex flex-col justify-between p-2 sm:p-2.5 bg-slate-50 rounded-2xl border border-slate-200/80">
+          <div class="flex items-center justify-between">
+            <i data-lucide="volume-2" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" id="voiceGuide" checked onchange="saveSettings()" class="sr-only peer">
+              <div class="w-7 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
+            </label>
           </div>
-          <label class="relative inline-flex items-center cursor-pointer shrink-0">
-            <input type="checkbox" id="voiceGuide" checked onchange="saveSettings()" class="sr-only peer">
-            <div class="w-8 sm:w-9 h-4.5 sm:h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 sm:after:h-4 after:w-3.5 sm:after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
-          </label>
+          <div class="mt-2">
+            <div class="text-[11px] font-bold text-slate-700 leading-tight truncate">음성&알림음</div>
+            <div class="text-[9px] text-slate-400 truncate">안내 및 비프음</div>
+          </div>
         </div>
 
-        <div class="flex items-center justify-between p-2 sm:p-2.5 bg-slate-50 rounded-2xl border border-slate-200/80 gap-1.5">
-          <div class="flex items-center gap-1.5 min-w-0">
-            <i data-lucide="heart-pulse" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 shrink-0"></i>
-            <div class="min-w-0">
-              <div class="text-[11px] sm:text-xs font-bold text-slate-700 truncate leading-tight">심장박동 사운드</div>
-              <div class="text-[9px] text-slate-400 truncate">러닝 외 구간 박동음</div>
-            </div>
+        <!-- 2. 심장박동 사운드 -->
+        <div class="flex flex-col justify-between p-2 sm:p-2.5 bg-slate-50 rounded-2xl border border-slate-200/80">
+          <div class="flex items-center justify-between">
+            <i data-lucide="heart-pulse" class="w-3.5 h-3.5 text-rose-500"></i>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" id="beatSound" checked onchange="saveSettings()" class="sr-only peer">
+              <div class="w-7 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-rose-500"></div>
+            </label>
           </div>
-          <label class="relative inline-flex items-center cursor-pointer shrink-0">
-            <input type="checkbox" id="beatSound" checked onchange="saveSettings()" class="sr-only peer">
-            <div class="w-8 sm:w-9 h-4.5 sm:h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 sm:after:h-4 after:w-3.5 sm:after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
-          </label>
+          <div class="mt-2">
+            <div class="text-[11px] font-bold text-slate-700 leading-tight truncate">심장박동음</div>
+            <div class="text-[9px] text-slate-400 truncate">러닝 외 박동음</div>
+          </div>
         </div>
-      </div>
 
-      <!-- 러닝 케이던스(160~200 SPM) 조절 카드 -->
-      <div class="bg-gradient-to-r from-cyan-50 to-blue-50 p-2.5 sm:p-3 rounded-2xl border border-cyan-200/90 space-y-1.5 shadow-xs">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-1.5">
-            <div class="w-6 h-6 rounded-lg bg-cyan-500 text-white flex items-center justify-center shrink-0">
-              <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
-            </div>
-            <div>
-              <span class="text-xs font-extrabold text-cyan-900">러닝 케이던스 리듬</span>
-              <span class="text-[10px] text-cyan-600 block">뛰기 구간 발걸음 메트로놈</span>
+        <!-- 3. 러닝 케이던스 -->
+        <div class="flex flex-col justify-between p-2 sm:p-2.5 bg-gradient-to-br from-cyan-50/90 to-blue-50/90 rounded-2xl border border-cyan-200/90">
+          <div class="flex items-center justify-between">
+            <i data-lucide="gauge" class="w-3.5 h-3.5 text-cyan-600"></i>
+            <span id="cadenceValDisplay" class="text-[11px] font-black text-cyan-700 font-mono">180 SPM</span>
+          </div>
+          <div class="mt-1.5">
+            <div class="text-[11px] font-bold text-cyan-900 leading-tight truncate">러닝 케이던스</div>
+            <div class="flex items-center justify-between mt-1 gap-1">
+              <button type="button" onclick="adjustCadence(-5)" class="w-5 h-5 rounded-md bg-white border border-cyan-200 text-cyan-700 font-bold text-[10px] active:scale-90 shadow-2xs flex items-center justify-center shrink-0">−</button>
+              <input type="range" id="cadenceSlider" min="160" max="200" step="1" value="180" oninput="setCadence(this.value)" class="w-full accent-cyan-600 h-1 bg-cyan-100 rounded-lg cursor-pointer">
+              <button type="button" onclick="adjustCadence(5)" class="w-5 h-5 rounded-md bg-white border border-cyan-200 text-cyan-700 font-bold text-[10px] active:scale-90 shadow-2xs flex items-center justify-center shrink-0">+</button>
             </div>
           </div>
-          <div class="flex items-center gap-1">
-            <button type="button" onclick="adjustCadence(-5)" class="w-6 h-6 rounded-lg bg-white border border-cyan-200 text-cyan-700 font-bold text-xs active:scale-90 shadow-xs flex items-center justify-center">−</button>
-            <span id="cadenceValDisplay" class="text-sm font-black text-cyan-700 min-w-[58px] text-center font-mono">180 SPM</span>
-            <button type="button" onclick="adjustCadence(5)" class="w-6 h-6 rounded-lg bg-white border border-cyan-200 text-cyan-700 font-bold text-xs active:scale-90 shadow-xs flex items-center justify-center">+</button>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 pt-0.5">
-          <span class="text-[10px] font-bold text-slate-400">160</span>
-          <input type="range" id="cadenceSlider" min="160" max="200" step="1" value="180" oninput="setCadence(this.value)" class="w-full accent-cyan-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer">
-          <span class="text-[10px] font-bold text-slate-400">200</span>
         </div>
       </div>
 
